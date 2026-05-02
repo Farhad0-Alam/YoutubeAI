@@ -109,7 +109,7 @@ Structure:
       try {
         const ai = createGeminiClient();
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-1.5-flash",
           contents: prompt,
           config: {
             temperature: 0.8,
@@ -280,7 +280,7 @@ Respond with valid JSON only. No markdown. Structure:
       try {
         const ai = createGeminiClient();
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-1.5-flash",
           contents: prompt,
           config: { temperature: 0.7, responseMimeType: "application/json" }
         });
@@ -357,7 +357,7 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
       try {
         const ai = createGeminiClient();
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-1.5-flash",
           contents: data.systemPrompt + "\n\n" + prompt,
           config: {
             temperature: 0.7

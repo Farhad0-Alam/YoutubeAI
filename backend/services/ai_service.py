@@ -136,7 +136,7 @@ async def call_gemini(system_prompt: str, user_prompt: str) -> dict:
     full_prompt = system_prompt + "\n\n" + user_prompt
     async with httpx.AsyncClient(timeout=60) as client:
         response = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={settings.GEMINI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}",
             json={
                 "contents": [{"parts": [{"text": full_prompt}]}],
                 "generationConfig": {

@@ -6,7 +6,8 @@ try:
 except ImportError:
     imageio_ffmpeg = None
 
-load_dotenv()
+load_dotenv(override=True)
+print(f"DEBUG: Using DATABASE_URL={os.getenv('DATABASE_URL')}")
 
 if imageio_ffmpeg:
     ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
@@ -29,12 +30,13 @@ class Settings:
     # Database
     DATABASE_URL = os.getenv(
         "DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/youtubeai"
+        "sqlite+aiosqlite:///./youtubeai.db"
     )
-
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
-    VIDEOS_DIR = os.path.join(OUTPUT_DIR, "videos") if OUTPUT_DIR else "./outputs/videos"
-    THUMBNAILS_DIR = os.path.join(OUTPUT_DIR, "thumbnails") if OUTPUT_DIR else "./outputs/thumbnails"
+    TEMP_DIR = os.path.join(OUTPUT_DIR, "temp")
+    VIDEOS_DIR = os.path.join(OUTPUT_DIR, "videos")
+    THUMBNAILS_DIR = os.path.join(OUTPUT_DIR, "thumbnails")
 
 settings = Settings()
 

@@ -42,3 +42,5 @@ Thumbs.db
 
 # Project specific
 backend/database/postgres.py.bak
+*.db
+*.sqlite3

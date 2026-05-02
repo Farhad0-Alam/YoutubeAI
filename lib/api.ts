@@ -28,13 +28,14 @@ export const api = {
   }) {
     const prompt = `You are an elite YouTube content strategist. The user wants to make a video about: "${data.topic}".
 Generate exactly 5 viral, highly-clickable YouTube Hook & Title pairs for this topic. 
+The hooks MUST be emotionally gripping, controversial, or highly curiosity-driven, avoiding generic AI-sounding intros. It must sound like a real, passionate human creator.
 Respond with valid JSON only. No markdown formatting (no \`\`\`json). Pure JSON only.
 Structure:
 {
   "ideas": [
     {
       "title": "SEO optimized, purely viral YouTube title here",
-      "hook": "The first 5 seconds script that instantly grabs attention"
+      "hook": "The first 5 seconds script that instantly grabs attention and sparks deep emotion or curiosity"
     }
   ]
 }`;
@@ -140,177 +141,34 @@ Structure:
     niche_id: string;
     topic: string;
     duration_minutes: number;
-    scene_length?: number;
     script_style: string;
-    visual_style?: string;
-    niche_config?: any;
-    aspect_ratio?: string;
+    extra_instructions?: string;
     llm_model?: string;
-    ollama_url?: string;
-    ollama_model?: string;
   }) {
-    const durationSeconds = Math.round(data.duration_minutes * 60);
-    const targetSceneLength = data.scene_length || 15;
-    const minWords = Math.max(20, Math.round((durationSeconds / 60) * 130));
-    const maxWords = Math.max(30, Math.round((durationSeconds / 60) * 170));
-    const sceneCount = Math.max(1, Math.round(durationSeconds / targetSceneLength)); // fallback to 1
-    const prompt = `You are an elite YouTube content strategist. Write a highly detailed, compelling video script.
-Topic: ${data.topic}
-Target Duration: ${durationSeconds} seconds
-Visual Style: ${data.visual_style || 'Match Niche Standard'}
-
-CRITICAL INSTRUCTION: To successfully produce a full ${durationSeconds} second video, you absolutely MUST generate exactly ${sceneCount} separate, highly-meaningful scenes in the JSON array.
-EACH SCENE represents roughly ${targetSceneLength} seconds of video. To maintain the storytelling pace and ensure the voiceover fits perfectly into ${targetSceneLength} seconds, the "narration" for EACH SCENE MUST contain exactly between ${Math.round(targetSceneLength * (25 / 15))} and ${Math.round(targetSceneLength * (33 / 15))} words.
-DO NOT summarize. Give me the FULL exact long-form narration, scene by scene. The script must be incredibly deep, meaningful, and engaging.
-
-IMPORTANT: Respond with valid JSON only. No markdown formatting (no \`\`\`json). Pure JSON only.
-Structure:
-{
-  "title": "SEO optimized YouTube title",
-  "description": "Full YouTube description",
-  "tags": ["tag1", "tag2"],
-  "hook": "First hook script",
-  "cta": "Final CTA script",
-  "scenes": [
-    {
-      "scene_number": 1,
-      "duration_seconds": ${targetSceneLength},
-      "narration": "Full voiceover paragraph for this specific block...",
-      "text_overlay": "Short caption max 8 words",
-      "visual_description": "Extremely detailed description of the exact visuals needed",
-      "vfx": "Special effects layers or filters (e.g. film grain, bloom, slow motion)",
-      "sound": "Sound design elements like whooshes, heartbeats, or specific foley",
-      "music": "Music description (e.g. Piano D2, light shaker, tension building)",
-      "search_keyword": "comma-separated list of at least 5 highly specific keywords for Capcut Media Library video search. Each keyword MUST be 1 to 3 words long. (e.g. 'futuristic city, night driving, neon glowing, city traffic, fast car')",
-      "image_prompt": "Detailed generative AI image prompt. Combine subject, environment, lighting, lens, and all components below into a single cohesive string, ending with params like --ar 16:9",
-      "image_color_grade": "Specific color palette or grading (e.g., cinematic teal and orange, desaturated, high contrast)",
-      "image_camera_angle": "Camera angle and position (e.g., eye level, low angle, overhead, drone shot)",
-      "image_mood": "Primary emotion or atmospheric keyword (e.g., intense, melancholic, ethereal, gritty)",
-      "image_negative_prompt": "Unwanted elements to exclude (e.g., --no text, watermarks, ugly)",
-      "image_seed": "A static integer seed for cross-scene consistency (e.g., --seed 847290)",
-      "image_character_consistency": "Character reference weights if applicable (e.g., --cw 100)",
-      "image_shot_type": "Framing of the subject (e.g., extreme close up, medium shot, wide establishing shot)",
-      "image_quality": "Rendering quality parameters (e.g., --q 2 --style raw)",
-      "image_lighting": "Specific lighting setup (e.g., dramatic low light, volumetric rays, soft studio box)",
-      "image_environment": "Background and setting details (e.g., cluttered desk, neon-lit alleyway, minimalist room)",
-      "video_prompt": "Detailed generative AI video prompt for the FULL scene. Explicitly describe camera movement (e.g., Pan left, Slow Zoom) and character/subject motion. Use this when generating the entire scene as one clip.",
-      "transition": "transition style between clips",
-      "camera_motion": "Explicit camera directions e.g. fast horizontal pan, static push-in, slow cinematic zoom",
-      "color_grading": "Color grading intent e.g. cool blue tones for rejection scene, warm green tones for approval. HIGH contrast. LUT: cyberpunk preset.",
-      "emotional_arc": "Emotional progression for this scene e.g. Fear -> Curiosity. Scene 1 triggers anxiety...",
-      "timing_and_pacing": "Sub-scene breakdown of timing e.g. Duration 8-12s. Pan 1.5s. Cut to user 0.5s. Rhythm: fast -> slow -> pause.",
-      "call_to_action_cue": "Specific CTA instructions for this scene e.g. 'No CTA in this scene — pure hook', or 'CTA appears in final scene with Link in bio'."
-    }
-  ],
-  "total_duration_seconds": ${durationSeconds}
-}`;
-
-    let responseText = "";
-    const openAIKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
-    const qwenKey = process.env.NEXT_PUBLIC_QWEN_API_KEY || "";
-    const requestedModel = data.llm_model || "gemini";
-
-    if (requestedModel === "ollama" && data.ollama_url) {
-      const ollamaEndpoint = data.ollama_url.endsWith('/') ? `${data.ollama_url}api/chat` : `${data.ollama_url}/api/chat`;
-      const response = await fetch(ollamaEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: data.ollama_model || "qwen2.5:14b",
-          messages: [
-            { role: "system", content: "You are a helpful JSON generation assistant. Always return valid raw JSON based on the user's prompt without backticks or markdown." },
-            { role: "user", content: prompt }
-          ],
-          stream: false,
-          format: "json"
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Ollama Script Generation Failed: ${await response.text()}. Have you started Ollama locally and set OLLAMA_ORIGINS="*" ?`);
-      }
-
-      const resData = await response.json();
-      responseText = resData.message?.content || "{}";
-
-    } else if (requestedModel === "qwen") {
-      const response = await fetch("/api/qwen", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "chat",
-          key: qwenKey,
-          payload: {
-            messages: [
-              { role: "system", content: "You are a helpful JSON generation assistant. Always return valid raw JSON based on the user's prompt without backticks or markdown." },
-              { role: "user", content: prompt }
-            ]
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Qwen Script Generation Failed: ${await response.text()}`);
-      }
-
-      const resData = await response.json();
-      responseText = resData.choices?.[0]?.message?.content || "{}";
-
-    } else if (requestedModel === "openai") {
-      const response = await fetch("/api/openai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "chat",
-          key: openAIKey,
-          payload: {
-            messages: [
-              { role: "system", content: "You are a helpful JSON generation assistant. Always return valid raw JSON based on the user's prompt without backticks or markdown." },
-              { role: "user", content: prompt }
-            ]
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`OpenAI Script Generation Failed: ${await response.text()}`);
-      }
-
-      const resData = await response.json();
-      responseText = resData.choices?.[0]?.message?.content || "{}";
-
-    } else {
-      try {
-        // Use Gemini API as fallback or if specifically requested
-        const ai = createGeminiClient();
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: prompt,
-          config: {
-            temperature: 0.7,
-            responseMimeType: "application/json",
-          }
-        });
-        responseText = response.text || "{}";
-      } catch (err: any) {
-        if (err?.status === 429 || err?.message?.includes("exceeded") || err?.status === "RESOURCE_EXHAUSTED") {
-          throw new Error("Gemini API Quota Exceeded. Please try again later or switch to OpenAI/Ollama in settings.");
-        }
-        throw new Error(err?.message || "Failed to generate script with Gemini API.");
-      }
-    }
-
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
     try {
-      let cleanText = responseText;
-      // Strip markdown code block formatting if the model still surrounds it
-      if (cleanText.includes("```")) {
-        cleanText = cleanText.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const response = await fetch(`${backendUrl}/api/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          niche_id: data.niche_id,
+          topic: data.topic,
+          duration_minutes: data.duration_minutes,
+          script_style: data.script_style,
+          extra_instructions: data.extra_instructions || "",
+          llm_model: data.llm_model || "groq"
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Script Generation Failed (${response.status}): ${errText}`);
       }
-      const result = JSON.parse(cleanText);
-      return result;
-    } catch (e) {
-      console.error("Parse Error on AI Response:", responseText);
-      throw new Error("Failed to parse AI response into JSON");
+
+      return await response.json();
+    } catch (error: any) {
+      console.error("Backend Script Generation Error:", error);
+      throw new Error(error.message || "Failed to generate script via backend");
     }
   },
 
@@ -382,10 +240,10 @@ Respond with valid JSON only. No markdown. Structure:
       "image_quality": "Rendering params (e.g. --q 2 --style raw)",
       "image_character_consistency": "Character ref weights (e.g. --cw 100)",
       "image_negative_prompt": "Unwanted elements (e.g. --no text, watermarks)",
-      "video_prompt": "Camera: [exact movement]. Subject: [exact action].",
+      "video_prompt": "Camera: [exact movement]. Subject: [exact action]. Include explicit instructions for any integrated AI audio/voice (e.g., Grok, Veo 3.1, Seedance) to be highly expressive, emotional, and human-like to ensure YouTube monetization safety.",
       "vfx": "Specific VFX for this moment",
-      "sound": "Sound design elements",
-      "music": "Music description",
+      "sound": "Specific Foley/SFX (e.g., heavy bass impact, digital glitch, cinematic whoosh)",
+      "music": "Music track style and pacing (e.g., suspenseful dark synth, fast-paced phonk)",
       "camera_motion": "Exact camera direction",
       "color_grading": "Color palette and grade",
       "emotional_arc": "Emotion at this moment",
@@ -518,157 +376,84 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
   },
 
   async fetchMedia(data: { niche_id: string; scenes: any[]; media_preference?: "video" | "image" | "auto"; aspect_ratio?: string }) {
-    const pexelsKey = process.env.NEXT_PUBLIC_PEXELS_API_KEY;
-    const openAIKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
-    const pref = data.media_preference || "auto";
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    try {
+      const response = await fetch(`${backendUrl}/api/media`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          niche_id: data.niche_id,
+          scenes: data.scenes.map(s => ({
+            scene_number: s.scene_number,
+            duration_seconds: s.duration_seconds || 10,
+            search_keyword: s.search_keyword || "",
+            image_prompt: s.image_prompt || ""
+          }))
+        })
+      });
 
-    let openAISize = "1792x1024";
-    if (data.aspect_ratio === "9:16") {
-      openAISize = "1024x1792";
-    } else if (data.aspect_ratio === "1:1") {
-      openAISize = "1024x1024";
-    }
+      if (!response.ok) {
+        throw new Error("Backend Media Fetch Failed");
+      }
 
-    const fetchImageAI = async (scene: any) => {
-      const prompt = scene.image_prompt || scene.search_keyword || "beautiful cinematic shot";
-
-      try {
-        const req = await fetch("/api/openai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "image",
-            key: openAIKey,
-            payload: { prompt, size: openAISize }
-          })
-        });
-        if (req.ok) {
-          const resData = await req.json();
-          if (resData.data && resData.data.length > 0 && resData.data[0].url) {
-            return {
-              scene_number: scene.scene_number,
-              media_path: resData.data[0].url,
-              media_type: "image" as const
-            };
-          }
+      const backendData = await response.json();
+      
+      // Merge results back into original scenes array
+      const mergedScenes = data.scenes.map(scene => {
+        const matchingResult = backendData.scenes?.find((r: any) => r.scene_number === scene.scene_number);
+        if (matchingResult) {
+          return {
+            ...scene,
+            media_path: matchingResult.media_path,
+            media_type: matchingResult.media_type,
+            media_options: [matchingResult]
+          };
         }
-      } catch (e) {
-        console.warn("OpenAI DALL-E generation failed, falling back to pollinations...", e);
-      }
+        return scene;
+      });
 
-      // Fallback
-      const seed = Math.floor(Math.random() * 999999);
-      const encodedPrompt = encodeURIComponent(prompt);
-      return {
-        scene_number: scene.scene_number,
-        media_path: `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1920&height=1080&nologo=true&seed=${seed}`,
-        media_type: "image" as const
-      };
-    };
-
-    let results = [];
-
-    for (const scene of data.scenes) {
-      scene.media_type = "image"; // default
-      scene.media_path = "";
-      scene.media_options = [];
-      let foundVideo = false;
-
-      if ((pref === "auto" || pref === "video") && pexelsKey) {
-        try {
-          const keywords = (scene.search_keyword || "landscape").split(',').map((k: string) => k.trim()).filter((k: string) => k.length > 0);
-
-          for (const keyword of keywords.slice(0, 6)) { // max 6 keyword searches per scene
-            const query = encodeURIComponent(keyword);
-            const req = await fetch(`https://api.pexels.com/videos/search?query=${query}&per_page=1&orientation=landscape`, {
-              headers: { Authorization: pexelsKey }
-            });
-            const res = await req.json();
-            if (res.videos && res.videos.length > 0) {
-              const vid = res.videos[0];
-              const hdVideoFile = vid.video_files.find((v: any) => v.quality === 'hd' || v.width >= 1920) || vid.video_files[0];
-              if (hdVideoFile && hdVideoFile.link) {
-                scene.media_options.push({
-                  media_path: hdVideoFile.link,
-                  media_type: "video",
-                  keyword: keyword,
-                  thumbnail_url: vid.image
-                });
-              }
-            }
-          }
-
-          if (scene.media_options.length > 0) {
-            // Deduplicate options by URL
-            const uniqueOptions = [];
-            const seenUrls = new Set();
-            for (const opt of scene.media_options) {
-              if (!seenUrls.has(opt.media_path)) {
-                seenUrls.add(opt.media_path);
-                uniqueOptions.push(opt);
-              }
-            }
-            scene.media_options = uniqueOptions;
-
-            scene.media_path = scene.media_options[0].media_path;
-            scene.media_type = "video";
-            foundVideo = true;
-          }
-        } catch (e) {
-          console.warn("Pexels fetch failed for scene:", scene.scene_number);
-        }
-      }
-
-      if (!foundVideo && (pref === "auto" || pref === "image")) {
-        const fallBackImg = await fetchImageAI(scene);
-        scene.media_path = fallBackImg.media_path;
-        scene.media_type = fallBackImg.media_type;
-        scene.media_options = [fallBackImg];
-      }
-
-      results.push(scene);
+      return { scenes: mergedScenes };
+    } catch (error) {
+      console.error("Media Error:", error);
+      throw error;
     }
-
-    return { scenes: results };
   },
 
   async generateTTS(data: any) {
-    const openAIKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
-    const requestedVoice = data.voice || "alloy";
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    try {
+      const response = await fetch(`${backendUrl}/api/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          voice: "en-US-AriaNeural", // default Edge-TTS voice
+          scenes: data.scenes.map((s: any) => ({
+            scene_number: s.scene_number,
+            narration: s.narration
+          }))
+        })
+      });
 
-    const audioFiles = [];
-    for (const s of data.scenes) {
-      if (!s.narration) continue;
-
-      try {
-        const req = await fetch("/api/openai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "tts",
-            key: openAIKey,
-            payload: {
-              input: s.narration,
-              voice: requestedVoice
-            }
-          })
-        });
-
-        if (req.ok) {
-          const resData = await req.json();
-          if (resData.audioBase64) {
-            const url = `data:audio/mp3;base64,${resData.audioBase64}`;
-            audioFiles.push({
-              scene_number: s.scene_number,
-              url: url
-            });
-          }
-        }
-      } catch (e) {
-        console.warn(`Failed TTS for scene ${s.scene_number}`, e);
-      }
+      if (!response.ok) throw new Error("Backend TTS Failed");
+      
+      const result = await response.json();
+      
+      // Map file_paths to URLs by extracting the filename
+      const audioFiles = result.audio_files.map((file: any) => {
+        // file.file_path might be an absolute path (e.g. C:\Users\...\temp\scene_1_audio.mp3)
+        // Extract just the filename to match the /temp static mount in FastAPI
+        const filename = file.file_path.split('\\').pop().split('/').pop();
+        return {
+          scene_number: file.scene_number,
+          url: `${backendUrl}/temp/${filename}`
+        };
+      });
+      
+      return { audio_files: audioFiles };
+    } catch (e) {
+      console.error("Backend TTS Error:", e);
+      throw e;
     }
-    return { audio_files: audioFiles };
   },
 
   async getVoices() {
@@ -715,10 +500,32 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
   },
 
   async renderVideo(data: any) {
-    // Mock the start of rendering
-    return {
-      job_id: `job_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      status: "queued"
-    };
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    try {
+      const response = await fetch(`${backendUrl}/api/render`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project_id: data.project_id || `proj_${Date.now()}`,
+          scenes: data.scenes.map((s: any) => ({
+            scene_number: s.scene_number,
+            media_path: s.media_path,
+            text_overlay: s.text_overlay || "",
+            transition: "fade"
+          })),
+          audio_files: data.audio_files || [],
+          resolution: "1080p",
+          caption_style: "default",
+          add_music: false,
+          music_mood: "neutral"
+        })
+      });
+
+      if (!response.ok) throw new Error("Backend Render Failed");
+      return await response.json();
+    } catch (e) {
+      console.error("Render error:", e);
+      throw e;
+    }
   }
 };

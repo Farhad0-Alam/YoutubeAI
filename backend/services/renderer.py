@@ -13,9 +13,24 @@ def create_caption_clip(text, duration):
     # Draw bottom bar
     d.rectangle([(0, 950), (1920, 1080)], fill=(0, 0, 0, 190))
     
-    try:
-        fnt = ImageFont.truetype("/fonts/Montserrat-Bold.ttf", 48)
-    except:
+    # Robust Font Loading (Windows & Linux support)
+    font_paths = [
+        "C:\\Windows\\Fonts\\arialbd.ttf",       # Windows Bold
+        "C:\\Windows\\Fonts\\segoeuib.ttf",      # Windows Segoe UI Bold
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", # Linux
+        "f:/YoutubeAI/backend/assets/fonts/Montserrat-Bold.ttf" # Local project path
+    ]
+    
+    fnt = None
+    for path in font_paths:
+        if os.path.exists(path):
+            try:
+                fnt = ImageFont.truetype(path, 48)
+                break
+            except:
+                continue
+    
+    if not fnt:
         fnt = ImageFont.load_default()
         
     # Center text

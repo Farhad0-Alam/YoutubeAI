@@ -9,38 +9,64 @@ logger = logging.getLogger(__name__)
 client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 
 async def generate_script(niche_config, topic, duration_minutes, style, extra_instructions):
-    system_prompt = f"""You are a professional YouTube content strategist specializing in HIGH-CPM faceless channels targeting USA audiences aged 25-54.
+    system_prompt = f"""You are a top-tier YouTube SEO expert and Content Strategist for high-CPM USA-based channels. 
+Your goal is to generate content that dominates search rankings and maximizes CTR (Click-Through Rate).
 
-Your scripts follow proven retention principles:
-1. Hook in first 30 seconds (shocking stat or bold claim)
-2. Promise value upfront
-3. Pattern interrupts every 60-90 seconds
-4. PAS framework: Problem -> Agitate -> Solution
-5. Micro-hook at end of each scene to keep watching
-6. Strong CTA in final 60 seconds
+Guidelines for USA Audience (Ages 25-54):
+1. **Title**: Create a high-CTR, curiosity-driven title (under 60 chars). Use "Power Words" (e.g., Revealed, Warning, Secret, Proven).
+2. **Hook**: The script must grab attention in the first 5 seconds with a high-stakes claim or question.
+3. **Structure**: Follow the PAS (Problem-Agitate-Solution) framework. 
+4. **SEO Description**: 
+    - First 2 lines: Primary keywords + high-tension hook.
+    - Timestamps: Chapter breakdown.
+    - Hashtags: 3-5 trending USA-niche hashtags.
+    - **Dynamic Disclaimer**: Generate a professional disclaimer tailored to the niche '{niche_config.get('display_name')}':
+        - For Finance/Crypto/Investing: Include a clear Financial Disclaimer (Not financial advice).
+        - For Health/Wellness/Fitness/Mental Health: Include a clear Medical Disclaimer (Not medical advice).
+        - For Legal/Law: Include a clear Legal Disclaimer (Not legal advice).
+        - For all others: Include a General Information Disclaimer.
+        - **MANDATORY FOR ALL**: State clearly that "Some assets and voices in this video are AI-generated to enhance the storytelling experience."
 
 Script style: {style}
 Niche tone: {niche_config.get('script_tone')}
 Target duration: {duration_minutes} minutes
 
-IMPORTANT: Respond with valid JSON only. No markdown formatting (no ```json). No explanation. Pure JSON only.
+IMPORTANT: Respond with valid JSON only. No markdown formatting. No explanation. Pure JSON only.
 Structure:
 {{
-  "title": "SEO optimized YouTube title (60 chars max)",
-  "description": "Full YouTube description with timestamps",
-  "tags": ["tag1", "tag2"],
+  "title": "High-CTR SEO Title",
+  "description_hook": "2 lines: Primary keywords + high-tension hook.",
+  "description_body": "Detailed summary of value provided in the video.",
+  "description_disclaimer": "Niche-specific Dynamic Disclaimer + AI Disclosure.",
+  "hashtags_string": "#tag1 #tag2 #tag3",
+  "tags": ["high-volume-tag1", "trending-tag2", "etc"],
   "hook": "First 30 seconds hook script",
   "cta": "Final CTA script",
   "scenes": [
     {{
       "scene_number": 1,
-      "duration_seconds": 45,
+      "duration_seconds": 15,
       "narration": "Full voiceover text for this scene",
+      "voice_tone": "Urgent/Calm/Curious",
       "text_overlay": "Short caption max 8 words",
-      "visual_description": "What appears on screen",
-      "search_keyword": "stock footage search term",
-      "image_prompt": "Detailed Pollinations.ai image prompt",
-      "transition": "fade"
+      "visual_description": "Cinematic visual description",
+      "search_keyword": "precise search term for Pexels",
+      "image_prompt": "Ultra-detailed cinematic prompt for high-quality AI images",
+      "image_subject": "Main focus of the shot",
+      "image_setting": "Background or environment",
+      "image_mood": "Atmosphere keyword",
+      "image_lighting": "Lighting setup",
+      "image_color_grade": "Color grading or palette",
+      "image_camera_angle": "Camera position",
+      "image_shot_type": "Shot framing",
+      "image_style_modifier": "Style keywords",
+      "video_prompt": "Detailed generative AI video prompt. Explicitly describe camera movement and subject motion.",
+      "transition": "transition style between clips",
+      "camera_motion": "Explicit camera directions e.g. fast horizontal pan",
+      "color_grading": "Color grading intent",
+      "sound": "Specific Foley/SFX (e.g., heavy bass impact)",
+      "music": "Music track style and pacing",
+      "timing_and_pacing": "Sub-scene breakdown of timing"
     }}
   ],
   "total_duration_seconds": {duration_minutes * 60}
@@ -59,14 +85,16 @@ Structure:
             max_tokens=4000
         )
         
+        import re
         content = response.choices[0].message.content.strip()
-        # Clean markdown output if the model ignored the instruction
-        if content.startswith("```json"):
-            content = content.replace("```json", "", 1)
-        if content.endswith("```"):
-            content = content[:-3]
-            
-        return json.loads(content.strip())
+        
+        # Bulletproof JSON extraction using regex
+        match = re.search(r'\{.*\}', content, re.DOTALL)
+        if match:
+            clean_json = match.group(0)
+            return json.loads(clean_json)
+        else:
+            raise ValueError("Failed to extract JSON from AI response")
         
     except Exception as e:
         logger.error(f"Groq API Error: {str(e)}")
@@ -91,13 +119,15 @@ Respond ONLY with a valid JSON object matching the scene format. Make it differe
             max_tokens=1500
         )
         
+        import re
         content = response.choices[0].message.content.strip()
-        if content.startswith("```json"):
-            content = content.replace("```json", "", 1)
-        if content.endswith("```"):
-            content = content[:-3]
-            
-        return json.loads(content.strip())
+        
+        match = re.search(r'\{.*\}', content, re.DOTALL)
+        if match:
+            clean_json = match.group(0)
+            return json.loads(clean_json)
+        else:
+            raise ValueError("Failed to extract JSON from AI response")
         
     except Exception as e:
         logger.error(f"Groq regenerate error: {str(e)}")

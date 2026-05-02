@@ -14,17 +14,27 @@ if imageio_ffmpeg:
     os.environ.setdefault("FFMPEG_BINARY", ffmpeg_exe)
 
 class Settings:
+    # Script Generation APIs
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-    PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("NEXT_PUBLIC_GEMINI_API_KEY")
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    XAI_API_KEY = os.getenv("XAI_API_KEY")
+    SEEDANCE_API_KEY = os.getenv("SEEDANCE_API_KEY")
+    
+    # Media APIs
+    PEXELS_API_KEY = os.getenv("PEXELS_API_KEY") or os.getenv("NEXT_PUBLIC_PEXELS_API_KEY")
     PIXABAY_API_KEY = os.getenv("PIXABAY_API_KEY")
     
-    MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-    MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "ytv_maker")
-    
-    TEMP_DIR = os.getenv("TEMP_DIR", "./temp")
+    # Database
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/youtubeai"
+    )
+
     OUTPUT_DIR = os.getenv("OUTPUT_DIR", "./outputs")
-    VIDEOS_DIR = os.path.join(OUTPUT_DIR, "videos")
-    THUMBNAILS_DIR = os.path.join(OUTPUT_DIR, "thumbnails")
+    VIDEOS_DIR = os.path.join(OUTPUT_DIR, "videos") if OUTPUT_DIR else "./outputs/videos"
+    THUMBNAILS_DIR = os.path.join(OUTPUT_DIR, "thumbnails") if OUTPUT_DIR else "./outputs/thumbnails"
 
 settings = Settings()
 

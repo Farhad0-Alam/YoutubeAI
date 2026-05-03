@@ -109,7 +109,7 @@ Structure:
       try {
         const ai = createGeminiClient();
         const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
+          model: "gemini-2.5-flash",
           contents: prompt,
           config: {
             temperature: 0.8,
@@ -182,14 +182,24 @@ Structure:
     aspect_ratio?: string;
     ai_model?: string;
     llm_model?: string;
+    chunk_interval?: number;
+    topic?: string;
+    hook?: string;
+    title?: string;
   }) {
-    const numSubScenes = Math.max(1, Math.ceil(data.duration_seconds / 4));
+    const interval = data.chunk_interval || 2;
+    const numSubScenes = Math.max(1, Math.ceil(data.duration_seconds / interval));
     const subDuration = Math.round(data.duration_seconds / numSubScenes);
     const aiTool = data.ai_model || 'seedance2.0';
     const style = data.visual_style || 'cinematic';
     const ratio = data.aspect_ratio || '16:9';
 
     const prompt = `You are an elite cinematic visual director for AI video production.
+
+PROJECT OVERVIEW:
+- Topic: ${data.topic || 'N/A'}
+- Title: ${data.title || 'N/A'}
+- Hook: ${data.hook || 'N/A'}
 
 SCENE CONTEXT:
 - Scene Number: ${data.scene_number}
@@ -280,7 +290,7 @@ Respond with valid JSON only. No markdown. Structure:
       try {
         const ai = createGeminiClient();
         const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
+          model: "gemini-2.5-flash",
           contents: prompt,
           config: { temperature: 0.7, responseMimeType: "application/json" }
         });
@@ -357,7 +367,7 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
       try {
         const ai = createGeminiClient();
         const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
+          model: "gemini-2.5-flash",
           contents: data.systemPrompt + "\n\n" + prompt,
           config: {
             temperature: 0.7
@@ -497,6 +507,77 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
     return {
       thumbnail_url: `https://image.pollinations.ai/prompt/${p}?width=1280&height=720&nologo=true&seed=${seed}`
     };
+  },
+
+  async generateSEOPackage(data: { script: string; title: string; niche: string; llm_model?: string }) {
+    const prompt = `You are an elite YouTube SEO strategist. Based on the following video script, generate a complete, highly-optimized YouTube metadata package.
+    
+    Topic: ${data.title}
+    Niche: ${data.niche}
+    
+    Script:
+    ${data.script.substring(0, 3000)} // Truncated for safety
+
+    Requirements:
+    1. 3 highly clickable, emotional, or curiosity-driven titles (max 60 chars each).
+    2. A keyword-rich description (first 2 lines must hook the viewer, include relevant links placeholders, and end with a call to action). DO NOT INCLUDE TIMESTAMPS in the description body (we will auto-generate them).
+    3. 15 viral tags (comma separated).
+    4. 1 highly engaging or controversial pinned comment to drive early interaction.
+
+    Respond with valid JSON only. No markdown. Structure:
+    {
+      "titles": ["Title 1", "Title 2", "Title 3"],
+      "description": "Full description here...",
+      "tags": ["tag1", "tag2", "tag3"],
+      "pinned_comment": "The comment text here..."
+    }`;
+
+    let responseText = "";
+    const openAIKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
+    const requestedModel = data.llm_model || "gemini";
+
+    if (requestedModel === "openai") {
+      const response = await fetch("/api/openai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "chat",
+          key: openAIKey,
+          payload: {
+            messages: [
+              { role: "system", content: "You are an elite YouTube SEO strategist. Return valid JSON only." },
+              { role: "user", content: prompt }
+            ]
+          }
+        })
+      });
+      if (!response.ok) throw new Error("OpenAI SEO generation failed");
+      const resData = await response.json();
+      responseText = resData.choices?.[0]?.message?.content || "{}";
+    } else {
+      try {
+        const ai = createGeminiClient();
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: prompt,
+          config: { temperature: 0.8, responseMimeType: "application/json" }
+        });
+        responseText = response.text || "{}";
+      } catch (err: any) {
+        throw new Error("Failed to generate SEO with Gemini API.");
+      }
+    }
+
+    try {
+      let cleanText = responseText;
+      if (cleanText.includes("\`\`\`")) {
+        cleanText = cleanText.replace(/\`\`\`json/gi, '').replace(/\`\`\`/g, '').trim();
+      }
+      return JSON.parse(cleanText);
+    } catch (e) {
+      console.error("Parse Error:", responseText);
+      throw new Error("Failed to parse SEO prompts");
+    }
   },
 
   async renderVideo(data: any) {

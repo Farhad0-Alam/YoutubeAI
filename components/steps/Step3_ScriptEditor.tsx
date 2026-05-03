@@ -176,7 +176,8 @@ export function Step3_ScriptEditor() {
           </h2>
           <button
             onClick={() => {
-              const text = `Title: ${scriptData.title}\n\nDescription:\n${scriptData.description}\n\nTags: ${(scriptData.tags || []).join(', ')}`;
+              const commentStr = scriptData.pinned_comment ? `\n\nPinned Comment:\n${scriptData.pinned_comment}` : '';
+              const text = `Title: ${scriptData.title}\n\nDescription:\n${scriptData.description}\n\nTags: ${(scriptData.tags || []).join(', ')}${commentStr}`;
               navigator.clipboard.writeText(text);
               toast.success('SEO Metadata copied to clipboard!');
             }}
@@ -189,9 +190,13 @@ export function Step3_ScriptEditor() {
         
         <div className="space-y-4">
           <div className="relative group">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Video Title</label>
+            <div className="flex justify-between items-end mb-2">
+              <label className="block text-sm font-semibold text-gray-700">Video Title</label>
+              <span className={`text-xs font-medium ${(scriptData.title || '').length > 90 ? 'text-orange-500' : 'text-gray-400'}`}>{(scriptData.title || '').length}/100</span>
+            </div>
             <input 
               type="text"
+              maxLength={100}
               value={scriptData.title}
               onChange={(e) => setScriptData({ ...scriptData, title: e.target.value })}
               className="w-full bg-slate-50 border border-gray-200 rounded-lg pl-4 pr-12 py-3 text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-colors cursor-text"
@@ -209,8 +214,12 @@ export function Step3_ScriptEditor() {
             </button>
           </div>
           <div className="relative group">
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Video Description & Hashtags</label>
+            <div className="flex justify-between items-end mb-2">
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Video Description & Hashtags</label>
+              <span className={`text-xs font-medium ${(scriptData.description || '').length > 900 ? 'text-orange-500' : 'text-gray-400'}`}>{(scriptData.description || '').length}/1000</span>
+            </div>
             <textarea 
+              maxLength={1000}
               value={scriptData.description || ''}
               onChange={(e) => setScriptData({ ...scriptData, description: e.target.value })}
               rows={4}
@@ -248,8 +257,75 @@ export function Step3_ScriptEditor() {
                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             </button>
           </div>
+          <div className="relative group">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pinned Comment</label>
+            <textarea 
+              value={scriptData.pinned_comment || ''}
+              onChange={(e) => setScriptData({ ...scriptData, pinned_comment: e.target.value })}
+              rows={3}
+              className="w-full bg-slate-50 border border-gray-200 rounded-lg pl-4 pr-12 py-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-colors cursor-text"
+              placeholder="Enter a controversial or engaging pinned comment..."
+            />
+            <button
+               onClick={() => {
+                  navigator.clipboard.writeText(scriptData.pinned_comment || '');
+                  toast.success('Pinned Comment copied to clipboard!');
+               }}
+               className="absolute right-3 top-[32px] p-2 text-gray-400 hover:text-gray-600 bg-white border border-gray-200 rounded-md shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+               title="Copy Pinned Comment"
+            >
+               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Step 3.5: Voice & Pacing Check */}
+      {(() => {
+        const totalWords = scriptData.scenes.reduce((acc, s) => acc + (s.narration ? s.narration.trim().split(/\s+/).filter(w => w.length > 0).length : 0), 0);
+        const estReadTimeSecs = Math.round(totalWords / 2.5); // 150 wpm
+        const totalDurationSecs = scriptData.total_duration_seconds || scriptData.scenes.reduce((acc, s) => acc + (s.duration_seconds || 15), 0);
+        const wpm = totalDurationSecs > 0 ? Math.round((totalWords / totalDurationSecs) * 60) : 150;
+        
+        let pacingStatus = "Perfect Pacing";
+        let pacingColor = "text-emerald-600 bg-emerald-50 border-emerald-200";
+        if (wpm > 170) { pacingStatus = "Too Fast"; pacingColor = "text-amber-600 bg-amber-50 border-amber-200"; }
+        if (wpm < 130) { pacingStatus = "Too Slow"; pacingColor = "text-amber-600 bg-amber-50 border-amber-200"; }
+
+        // Pattern interrupt check (just check if transitions are used)
+        const hasInterrupts = scriptData.scenes.some(s => s.transition && s.transition.length > 5);
+
+        return (
+          <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6 mt-8">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+              Voice & Pacing Check
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="border border-gray-100 rounded-lg p-4 bg-gray-50">
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Est. Read Time</div>
+                <div className="text-xl font-bold text-gray-800">{Math.floor(estReadTimeSecs / 60)}m {estReadTimeSecs % 60}s</div>
+                <div className="text-xs text-gray-500 mt-1">vs {Math.floor(totalDurationSecs / 60)}m {totalDurationSecs % 60}s target</div>
+              </div>
+              <div className={`border rounded-lg p-4 ${pacingColor}`}>
+                <div className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">Speaking Pace</div>
+                <div className="text-xl font-bold">{wpm} WPM</div>
+                <div className="text-xs mt-1 font-semibold">{pacingStatus}</div>
+              </div>
+              <div className="border border-gray-100 rounded-lg p-4 bg-gray-50">
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Pattern Interrupts</div>
+                <div className="text-lg font-bold text-gray-800">{hasInterrupts ? "Active" : "Needs Work"}</div>
+                <div className="text-xs text-gray-500 mt-1">Add transitions to keep attention</div>
+              </div>
+              <div className="border border-gray-100 rounded-lg p-4 bg-gray-50">
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Retention Reminders</div>
+                <div className="text-sm font-bold text-gray-800">Check 30s & 60s marks</div>
+                <div className="text-[10px] text-gray-500 mt-1">Is there a hook re-engagement?</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center gap-4 pt-6 mt-8">
         <button 

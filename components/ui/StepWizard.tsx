@@ -14,10 +14,11 @@ export function StepWizard() {
     "Hook & Title",
     "Script Editor",
     "Storyboard",
-    "Generate Media",
-    "Review Media",
+    "Media Dashboard",
+    "Brand Kit",
     "Thumbnail",
-    "Render"
+    "Render",
+    "Publish & Schedule"
   ];
 
   return (

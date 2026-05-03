@@ -7,15 +7,40 @@ import * as htmlToImage from 'html-to-image';
 
 export function Step7_ThumbnailStudio() {
   const { scriptData, project, setStep } = useVideoStore();
+  
+  // Extract all generated image prompts from Storyboard
+  const availableImagePrompts: { label: string, prompt: string }[] = [];
+  scriptData?.scenes?.forEach((scene) => {
+    if (scene.image_prompt) {
+      availableImagePrompts.push({ label: `Scene ${scene.scene_number}`, prompt: scene.image_prompt });
+    }
+    scene.sub_scenes?.forEach((sub, subIdx) => {
+      if (sub.image_prompt) {
+        availableImagePrompts.push({ label: `Shot ${scene.scene_number}.${subIdx + 1}`, prompt: sub.image_prompt });
+      }
+    });
+  });
+
+  // Extract all text overlays from Storyboard
+  const availableTexts = Array.from(new Set<string>(
+    (scriptData?.scenes?.flatMap(scene => [
+      scene.text_overlay,
+      ...(scene.sub_scenes?.map(sub => sub.text_overlay) || [])
+    ]) || []).filter(t => t && t.trim().length > 3)
+  ));
+
+  const defaultFilter = scriptData?.scenes?.[0]?.color_grading?.toLowerCase().includes('desaturate') ? 'grayscale(100%) border-white' : 'none';
+  const defaultPrompt = availableImagePrompts[0]?.prompt || scriptData?.niche_config?.image_prompt_style || 'Dramatic dark lighting';
+
   const [title, setTitle] = useState(scriptData?.title?.substring(0, 30) || 'Shocking Update');
-  const [subtitle, setSubtitle] = useState('Watch this now');
-  const [prompt, setPrompt] = useState(scriptData?.niche_config?.image_prompt_style || 'Dramatic dark lighting');
+  const [subtitle, setSubtitle] = useState(availableTexts[0] || 'Watch this now');
+  const [prompt, setPrompt] = useState(defaultPrompt);
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Customization states
   const [fontFamily, setFontFamily] = useState('Inter');
-  const [filter, setFilter] = useState('none');
+  const [filter, setFilter] = useState(defaultFilter);
   const [textY, setTextY] = useState(50);
   const [textColor, setTextColor] = useState('#ffffff');
   const [textAlign, setTextAlign] = useState<'left'|'center'|'right'>('center');
@@ -63,6 +88,26 @@ export function Step7_ThumbnailStudio() {
         {/* Settings Panel */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6 space-y-5">
+            
+            {/* Context Injection: Storyboard Picker */}
+            {availableImagePrompts.length > 0 && (
+              <div className="mb-6 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                <label className="block text-xs font-bold text-indigo-800 mb-2 uppercase tracking-wider">Storyboard Scenes</label>
+                <p className="text-xs text-indigo-600/80 mb-3 leading-relaxed">Select a prompt generated from your storyboard scenes.</p>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-indigo-200">
+                  {availableImagePrompts.map((p, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setPrompt(p.prompt)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors border ${prompt === p.prompt ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm' : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'}`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Art Direction Prompt</label>
               <textarea 
@@ -75,7 +120,7 @@ export function Step7_ThumbnailStudio() {
             <button 
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="w-full py-3 bg-white border-2 border-gray-200 text-gray-900 rounded-lg font-semibold hover:border-indigo-600 hover:text-indigo-600 transition-colors flex justify-center items-center gap-2"
+              className="w-full py-3 bg-indigo-600 border border-indigo-700 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors flex justify-center items-center gap-2 shadow-sm"
             >
               {isGenerating && <Loader2 className="w-5 h-5 animate-spin" />}
               {isGenerating ? 'Rendering Background...' : 'Generate New Background'}
@@ -95,11 +140,28 @@ export function Step7_ThumbnailStudio() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">Subtitle overlay</label>
               <input 
                 type="text" value={subtitle} onChange={(e) => setSubtitle(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2"
               />
+              
+              {/* Context Injection: Text Overlay Suggestions */}
+              {availableTexts.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <span className="text-[10px] text-gray-400 uppercase font-bold mr-1 flex items-center">Suggestions:</span>
+                  {availableTexts.slice(0, 5).map((t, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSubtitle(t)}
+                      className="text-[10px] font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-0.5 rounded transition-colors"
+                      title={t}
+                    >
+                      {t.substring(0, 20)}{t.length > 20 ? '...' : ''}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 mt-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Font Style</label>
                 <select 
@@ -222,13 +284,13 @@ export function Step7_ThumbnailStudio() {
           onClick={() => setStep(6)}
           className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold border border-gray-300 shadow-sm hover:bg-gray-200 transition-colors"
         >
-          Back
+          Back to Brand Kit
         </button>
         <button 
           onClick={() => setStep(8)}
-          className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold shadow-sm hover:bg-indigo-700 transition-colors"
+          className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold transition-colors hover:bg-indigo-700 shadow-sm"
         >
-          Proceed to Render
+          Continue to Render
         </button>
       </div>
     </div>

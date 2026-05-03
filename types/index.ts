@@ -134,6 +134,7 @@ export interface ScriptData {
   title: string;
   description: string;
   tags: string[];
+  pinned_comment?: string;
   hook: string;
   cta: string;
   scenes: Scene[];
@@ -145,6 +146,7 @@ export interface ScriptData {
 export interface Project {
   _id: string;
   title: string;
+  hook?: string;
   niche_id: string;
   topic: string;
   script_style: string;

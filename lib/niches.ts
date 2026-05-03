@@ -26,7 +26,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["shocking_stat", "bold_claim", "curiosity_gap"],
     keywords: ["investing", "stocks", "wealth", "passive income", "ETF"],
     monetization: ["AdSense", "sponsorships", "affiliate (broker)"],
-    contentPillars: ["market news", "how-to invest", "portfolio review", "stock picks"],
+    contentPillars: ["market news", "how-to invest", "portfolio review", "stock picks", "ETF & index funds", "dividend investing", "options trading", "Warren Buffett strategies", "bear market survival", "passive income", "IPO breakdowns", "hedge fund secrets"],
     audience: { age: "25–45", intent: "high buying", retention: "high" },
     competitionLevel: "high"
   },
@@ -55,7 +55,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["fear_hook", "shocking_stat", "question_hook"],
     keywords: ["life insurance", "health coverage", "term vs whole"],
     monetization: ["AdSense", "lead gen", "affiliate"],
-    contentPillars: ["explainers", "comparisons", "mistakes to avoid"],
+    contentPillars: ["explainers", "comparisons", "mistakes to avoid", "life insurance", "health insurance", "car insurance", "home insurance", "term vs whole", "insurance scams", "best policies 2025", "what NOT to buy"],
     audience: { age: "30–55", intent: "very high buying", retention: "medium" },
     competitionLevel: "medium"
   },
@@ -84,7 +84,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["fear_hook", "bold_claim", "story_open"],
     keywords: ["lawsuit", "legal rights", "attorney", "court"],
     monetization: ["AdSense", "legal firm sponsorship", "consultations"],
-    contentPillars: ["know your rights", "case breakdowns", "legal myths"],
+    contentPillars: ["know your rights", "case breakdowns", "legal myths", "employee rights", "landlord-tenant law", "divorce law", "criminal defense", "small claims court", "contract traps", "immigration law", "police encounters", "sue your employer"],
     audience: { age: "28–55", intent: "high", retention: "high" },
     competitionLevel: "low"
   },
@@ -113,7 +113,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["curiosity_gap", "bold_claim", "shocking_stat"],
     keywords: ["real estate investing", "rental property", "house flipping"],
     monetization: ["AdSense", "course sales", "agent referrals"],
-    contentPillars: ["market analysis", "how to buy", "investing tips"],
+    contentPillars: ["market analysis", "how to buy", "investing tips", "house flipping", "rental property", "short-term rentals", "REITs explained", "real estate mistakes", "first-time buyer guide", "commercial real estate", "real estate in 2025", "passive income from property"],
     audience: { age: "28–50", intent: "very high", retention: "high" },
     competitionLevel: "high"
   },
@@ -142,7 +142,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["shocking_stat", "question_hook", "curiosity_gap"],
     keywords: ["budgeting", "saving money", "debt free", "frugal"],
     monetization: ["AdSense", "affiliate (credit cards)", "course"],
-    contentPillars: ["budgeting", "saving hacks", "debt payoff", "frugality"],
+    contentPillars: ["budgeting", "saving hacks", "debt payoff", "frugality", "emergency fund", "credit score", "side hustles", "spend less", "financial freedom", "money mistakes", "50/30/20 rule", "zero-based budgeting"],
     audience: { age: "20–40", intent: "high", retention: "medium" },
     competitionLevel: "very high"
   },
@@ -171,7 +171,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["bold_claim", "controversy", "curiosity_gap"],
     keywords: ["Bitcoin", "crypto portfolio", "altcoins", "DeFi"],
     monetization: ["AdSense", "exchange affiliate", "token sponsorship"],
-    contentPillars: ["market analysis", "coin reviews", "news", "tutorials"],
+    contentPillars: ["market analysis", "coin reviews", "crypto news", "tutorials", "Bitcoin predictions", "altcoin gems", "DeFi explained", "NFT market", "crypto wallet setup", "on-chain analysis", "exchange comparison", "crypto tax guide"],
     audience: { age: "18–40", intent: "high", retention: "medium" },
     competitionLevel: "very high"
   },
@@ -200,7 +200,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["curiosity_gap", "bold_claim", "shocking_stat"],
     keywords: ["AI tools", "ChatGPT", "automation", "future of tech"],
     monetization: ["AdSense", "SaaS affiliate", "tool sponsorship"],
-    contentPillars: ["tool reviews", "tutorials", "news", "predictions"],
+    contentPillars: ["tool reviews", "tutorials", "AI news", "predictions", "ChatGPT tips", "AI automation", "best AI tools", "prompt engineering", "AI vs humans", "future of jobs", "robotics", "machine learning explained"],
     audience: { age: "20–45", intent: "high", retention: "very high" },
     competitionLevel: "high"
   },
@@ -229,7 +229,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["story_open", "bold_claim", "curiosity_gap"],
     keywords: ["startup", "side hustle", "business tips", "entrepreneur"],
     monetization: ["AdSense", "course sales", "mastermind"],
-    contentPillars: ["case studies", "how to start", "mistakes", "interviews"],
+    contentPillars: ["case studies", "how to start", "business mistakes", "entrepreneur stories", "startup funding", "growing to 7 figures", "business models", "marketing strategies", "dropshipping", "Amazon FBA", "agency business", "social media business"],
     audience: { age: "22–45", intent: "very high", retention: "high" },
     competitionLevel: "very high"
   },
@@ -258,7 +258,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["curiosity_gap", "question_hook", "bold_claim"],
     keywords: ["Notion", "productivity", "time management", "workflow"],
     monetization: ["AdSense", "SaaS affiliate", "template sales"],
-    contentPillars: ["tool reviews", "systems", "routines", "setups"],
+    contentPillars: ["tool reviews", "systems", "morning routines", "desk setups", "Notion templates", "time management", "deep work", "focus hacks", "second brain", "weekly review", "anti-procrastination", "digital minimalism"],
     audience: { age: "22–40", intent: "high", retention: "high" },
     competitionLevel: "medium"
   },
@@ -287,7 +287,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["story_open", "curiosity_gap", "pov_hook"],
     keywords: ["luxury cars", "designer", "expensive", "rich lifestyle"],
     monetization: ["brand deals", "AdSense", "affiliate (luxury)"],
-    contentPillars: ["reviews", "vlogs", "day in life", "comparisons"],
+    contentPillars: ["luxury reviews", "vlogs", "day in life", "comparisons", "luxury cars", "private jets", "designer fashion", "luxury watches", "5-star hotels", "rich neighborhoods", "billionaire lifestyle", "luxury tech"],
     audience: { age: "18–35", intent: "aspirational", retention: "medium" },
     competitionLevel: "medium"
   },
@@ -316,7 +316,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["fear_hook", "story_open", "bold_claim"],
     keywords: ["gut health", "longevity", "sleep", "natural remedies"],
     monetization: ["AdSense", "supplement affiliate", "course"],
-    contentPillars: ["tips", "research summaries", "routines", "debunking myths"],
+    contentPillars: ["health tips", "research summaries", "wellness routines", "debunking myths", "gut health", "sleep optimization", "longevity secrets", "cold plunge & sauna", "supplements guide", "anti-aging", "natural remedies", "nutrition science"],
     audience: { age: "28–55", intent: "high", retention: "high" },
     competitionLevel: "very high"
   },
@@ -345,7 +345,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["before_after", "story_open", "bold_claim"],
     keywords: ["weight loss", "workout", "diet", "gym", "transformation"],
     monetization: ["AdSense", "fitness affiliate", "program sales"],
-    contentPillars: ["workouts", "meal plans", "transformations", "tips"],
+    contentPillars: ["workouts", "meal plans", "body transformations", "fat loss tips", "muscle building", "home workouts", "gym beginners", "diet comparisons", "calorie counting", "weight loss myths", "intermittent fasting", "6-pack abs"],
     audience: { age: "18–40", intent: "high", retention: "medium" },
     competitionLevel: "very high"
   },
@@ -374,7 +374,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["story_open", "question_hook", "empathy_hook"],
     keywords: ["anxiety", "depression", "therapy", "mindfulness"],
     monetization: ["AdSense", "app affiliate", "course"],
-    contentPillars: ["coping tips", "science", "personal stories", "therapy guides"],
+    contentPillars: ["coping tips", "mental health science", "personal stories", "therapy guides", "anxiety explained", "depression awareness", "trauma & healing", "narcissistic abuse", "impostor syndrome", "burnout recovery", "mindfulness", "dark psychology"],
     audience: { age: "18–40", intent: "medium", retention: "very high" },
     competitionLevel: "medium"
   },
@@ -403,7 +403,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["fear_hook", "bold_claim", "question_hook"],
     keywords: ["resume", "interview tips", "job search", "salary negotiation"],
     monetization: ["AdSense", "course sales", "resume service affiliate"],
-    contentPillars: ["interview prep", "resume tips", "career growth", "salary"],
+    contentPillars: ["interview prep", "resume tips", "career growth", "salary negotiation", "remote jobs", "LinkedIn strategy", "job application mistakes", "high-paying careers", "career change", "freelancing", "work-life balance", "corporate red flags"],
     audience: { age: "22–40", intent: "high", retention: "high" },
     competitionLevel: "medium"
   },
@@ -432,7 +432,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["bold_claim", "list_hook", "question_hook"],
     keywords: ["habits", "discipline", "morning routine", "mindset"],
     monetization: ["AdSense", "book affiliate", "course", "coaching"],
-    contentPillars: ["habits", "mindset", "book summaries", "routines"],
+    contentPillars: ["habits", "mindset", "book summaries", "daily routines", "stoicism", "discipline tips", "confidence building", "fear & comfort zone", "social skills", "reading list", "journaling", "atomic habits"],
     audience: { age: "18–35", intent: "high", retention: "high" },
     competitionLevel: "very high"
   },
@@ -461,7 +461,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["bold_claim", "story_open", "controversy"],
     keywords: ["motivation", "success mindset", "hustle", "discipline"],
     monetization: ["AdSense", "course affiliate", "merchandise"],
-    contentPillars: ["speeches", "quotes", "life lessons", "stories"],
+    contentPillars: ["motivational speeches", "quotes", "life lessons", "success stories", "overcoming failure", "hard work pays off", "millionaire mindset", "hustle culture", "morning motivation", "never give up", "elite mindset", "monk mentality"],
     audience: { age: "16–35", intent: "medium", retention: "medium" },
     competitionLevel: "very high"
   },
@@ -490,7 +490,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["story_open", "question_hook", "empathy_hook"],
     keywords: ["dating", "attachment style", "toxic relationships", "psychology"],
     monetization: ["AdSense", "therapy app affiliate", "course"],
-    contentPillars: ["dating tips", "psychology facts", "red flags", "self-love"],
+    contentPillars: ["dating tips", "psychology facts", "red flags", "self-love", "attachment styles", "toxic relationships", "how to attract", "body language", "breakup recovery", "friendship dynamics", "family psychology", "manipulation tactics"],
     audience: { age: "18–35", intent: "medium", retention: "very high" },
     competitionLevel: "high"
   },
@@ -519,7 +519,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["shocking_stat", "curiosity_gap", "story_open"],
     keywords: ["history", "ancient", "war", "forgotten facts", "empires"],
     monetization: ["AdSense", "book affiliate", "Patreon"],
-    contentPillars: ["untold stories", "wars", "empires", "mysteries"],
+    contentPillars: ["untold stories", "wars", "empires", "mysteries", "ancient civilizations", "dark history", "historical figures", "lost cities", "WW2 secrets", "forgotten inventions", "timeline of events", "history myths debunked"],
     audience: { age: "25–55", intent: "low", retention: "very high" },
     competitionLevel: "medium"
   },
@@ -548,7 +548,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["story_open", "curiosity_gap", "fear_hook"],
     keywords: ["unsolved", "cold case", "serial killer", "mysterious disappearance"],
     monetization: ["AdSense", "Patreon", "merch", "podcast cross-sell"],
-    contentPillars: ["case breakdowns", "unsolved", "conspiracy", "forensics"],
+    contentPillars: ["case breakdowns", "unsolved mysteries", "conspiracy theories", "forensics", "serial killers", "cold cases", "missing persons", "cults", "heists", "wrongful convictions", "FBI files", "paranormal & unexplained"],
     audience: { age: "25–50", intent: "low", retention: "very high" },
     competitionLevel: "high"
   },
@@ -577,7 +577,7 @@ export const niches: NicheConfig[] = [
     hookFormulas: ["shocking_stat", "curiosity_gap", "question_hook"],
     keywords: ["how does it work", "science explained", "physics", "biology"],
     monetization: ["AdSense", "course affiliate", "Patreon"],
-    contentPillars: ["explainers", "experiments", "debunking", "discoveries"],
+    contentPillars: ["explainers", "experiments", "debunking myths", "new discoveries", "space & astronomy", "human body science", "climate & earth", "quantum physics", "biology facts", "what if scenarios", "math explained", "chemistry reactions"],
     audience: { age: "15–40", intent: "low", retention: "very high" },
     competitionLevel: "medium"
   }

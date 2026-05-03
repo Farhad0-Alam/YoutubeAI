@@ -6,9 +6,10 @@ import { Step2_HookTitle } from '@/components/steps/Step2_HookTitle';
 import { Step3_ScriptEditor } from '@/components/steps/Step3_ScriptEditor';
 import { Step4_StoryboardPreview } from '@/components/steps/Step4_StoryboardPreview';
 import { Step5_MediaSelector } from '@/components/steps/Step5_MediaSelector';
-import { Step6_ReviewMedia } from '@/components/steps/Step6_ReviewMedia';
+import { Step6_BrandKit } from '@/components/steps/Step6_BrandKit';
 import { Step7_ThumbnailStudio } from '@/components/steps/Step7_ThumbnailStudio';
 import { Step8_RenderExport } from '@/components/steps/Step8_RenderExport';
+import { Step9_PublishSchedule } from '@/components/steps/Step9_PublishSchedule';
 
 export default function Home() {
   const currentStep = useVideoStore((s) => s.currentStep);
@@ -25,9 +26,10 @@ export default function Home() {
         {currentStep === 3 && <Step3_ScriptEditor />}
         {currentStep === 4 && <Step4_StoryboardPreview />}
         {currentStep === 5 && <Step5_MediaSelector />}
-        {currentStep === 6 && <Step6_ReviewMedia />}
+        {currentStep === 6 && <Step6_BrandKit />}
         {currentStep === 7 && <Step7_ThumbnailStudio />}
         {currentStep === 8 && <Step8_RenderExport />}
+        {currentStep === 9 && <Step9_PublishSchedule />}
       </div>
     </div>
   );

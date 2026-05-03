@@ -120,21 +120,62 @@ export function SceneCard({ scene, index, onUpdate, onRegenerate, isRegenerating
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-32 flex-shrink-0 flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start border-b md:border-b-0 md:border-r border-gray-100 pb-4 md:pb-0 pr-0 md:pr-6">
+        <div className="md:w-40 flex-shrink-0 flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start border-b md:border-b-0 md:border-r border-gray-100 pb-4 md:pb-0 pr-0 md:pr-6">
           <div className="flex items-center gap-4 md:flex-col md:items-start md:gap-0">
             <div className="text-4xl md:text-5xl font-bold text-gray-200 tracking-tighter mb-0 md:mb-2 leading-none">
               {(scene.scene_number).toString().padStart(2, '0')}
             </div>
-            <div className="text-xs font-semibold text-gray-500 bg-gray-50 px-2 py-1 rounded w-max border border-gray-100">
+            <div className="text-xs font-semibold text-gray-500 bg-gray-50 px-2 py-1 rounded w-max border border-gray-100 mb-4">
               {scene.duration_seconds} sec
             </div>
+            
+            {/* Read Time & Retention Risk */}
+            {(() => {
+              const narrationWords = scene.narration ? scene.narration.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+              const readTimeSeconds = Math.round(narrationWords / 2.5); // 150 wpm = 2.5 wps
+              const riskLevel = Math.abs(readTimeSeconds - (scene.duration_seconds || 15));
+              
+              let riskColor = "bg-emerald-500";
+              let riskLabel = "Low Risk";
+              let riskWidth = "25%";
+              
+              if (riskLevel > 5) {
+                riskColor = "bg-amber-500";
+                riskLabel = "Medium Risk";
+                riskWidth = "60%";
+              }
+              if (riskLevel > 10) {
+                riskColor = "bg-red-500";
+                riskLabel = "High Risk";
+                riskWidth = "95%";
+              }
+
+              return (
+                <div className="w-full space-y-3 hidden md:block">
+                  <div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Est. Read Time</div>
+                    <div className="text-sm font-bold text-gray-700">{readTimeSeconds}s <span className="text-xs font-normal text-gray-400">({narrationWords} words)</span></div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex justify-between">
+                      <span>Retention Risk</span>
+                      <span className={riskColor.replace('bg-', 'text-')}>{riskLabel}</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                      <div className={`${riskColor} h-1.5 rounded-full`} style={{ width: riskWidth }}></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
           </div>
           
           {onRegenerate && (
             <button 
               onClick={onRegenerate}
               disabled={isRegenerating}
-              className="mt-0 md:mt-6 text-xs font-bold text-indigo-600 hover:text-indigo-700 disabled:opacity-50 transition-colors bg-indigo-50 px-3 py-2 rounded-lg"
+              className="mt-0 md:mt-6 w-full text-xs font-bold text-indigo-600 hover:text-indigo-700 disabled:opacity-50 transition-colors bg-indigo-50 px-3 py-2 rounded-lg"
             >
               {isRegenerating ? "Rewriting..." : "Rewrite Scene"}
             </button>
@@ -414,6 +455,26 @@ export function SceneCard({ scene, index, onUpdate, onRegenerate, isRegenerating
                   value={scene.vfx || ''}
                   onChange={(e) => onUpdate({ vfx: e.target.value })}
                   placeholder="e.g. Anamorphic lens flare, Warm softbox key light"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Emotional Arc</label>
+                <input
+                  type="text"
+                  value={scene.emotional_arc || ''}
+                  onChange={(e) => onUpdate({ emotional_arc: e.target.value })}
+                  placeholder="e.g. Tension building to release, Melancholy to hope"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Call To Action Cue</label>
+                <input
+                  type="text"
+                  value={scene.call_to_action_cue || ''}
+                  onChange={(e) => onUpdate({ call_to_action_cue: e.target.value })}
+                  placeholder="e.g. Subscribe button pop-up, Point down gesture"
                   className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
                 />
               </div>

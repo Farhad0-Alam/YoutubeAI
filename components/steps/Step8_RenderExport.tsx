@@ -6,7 +6,7 @@ import { LivePreviewPlayer } from '../ui/LivePreviewPlayer';
 import { VideoEditor } from './VideoEditor';
 import { api } from '../../lib/api';
 import { toast } from 'sonner';
-import { Loader2, Download, PackageOpen } from 'lucide-react';
+import { Loader2, Download, PackageOpen, Sparkles, Copy, Check, Share2 } from 'lucide-react';
 import { compileAndDownloadVideo } from '../../lib/videoCompiler';
 
 export function Step8_RenderExport() {
@@ -17,6 +17,47 @@ export function Step8_RenderExport() {
   const [renderComplete, setRenderComplete] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isGeneratingSEO, setIsGeneratingSEO] = useState(false);
+  const [seoData, setSeoData] = useState<any>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleGenerateSEO = async () => {
+    if (!project || !scriptData) return;
+    setIsGeneratingSEO(true);
+    try {
+      const fullScript = scriptData.scenes.map(s => s.narration).join(" ");
+      const data = await api.generateSEOPackage({
+        script: fullScript,
+        title: project.topic,
+        niche: project.niche_id,
+        llm_model: project.settings?.llm_model
+      });
+
+      let currentSeconds = 0;
+      let timestampsStr = "\n\nTimestamps:\n";
+      scriptData.scenes.forEach((scene, i) => {
+        const mins = Math.floor(currentSeconds / 60);
+        const secs = Math.floor(currentSeconds % 60);
+        const timeFormatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        timestampsStr += `${timeFormatted} - ${scene.search_keyword || "Scene " + (i+1)}\n`;
+        currentSeconds += scene.duration_seconds || 15;
+      });
+
+      data.description = data.description + timestampsStr;
+      setSeoData(data);
+      toast.success('YouTube SEO Metadata generated!');
+    } catch (err) {
+      toast.error('Failed to generate SEO Metadata');
+    } finally {
+      setIsGeneratingSEO(false);
+    }
+  };
 
   useEffect(() => {
     api.getVoices().then(setVoices).catch(console.error);
@@ -129,6 +170,89 @@ export function Step8_RenderExport() {
               Source Assets
             </button>
           </div>
+
+          <div className="mt-12 border-t border-gray-200 pt-8">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">YouTube SEO Package</h2>
+                <p className="text-sm text-gray-500 mt-1">Generate viral titles, description, tags, and pinned comment for publishing.</p>
+              </div>
+              <button 
+                onClick={handleGenerateSEO}
+                disabled={isGeneratingSEO}
+                className="px-6 py-2.5 bg-indigo-50 text-indigo-700 font-semibold rounded-lg shadow-sm hover:bg-indigo-100 transition-colors flex items-center gap-2 border border-indigo-200"
+              >
+                {isGeneratingSEO ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                {seoData ? 'Regenerate SEO' : 'Generate SEO Metadata'}
+              </button>
+            </div>
+            
+            {seoData && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-700 mb-2">Viral Titles</h3>
+                    <div className="space-y-2">
+                      {seoData.titles?.map((t: string, i: number) => (
+                        <div key={i} className="flex gap-2 relative group">
+                          <div className="bg-white p-3 rounded-lg border border-gray-200 text-sm font-semibold text-gray-800 flex-1">{t}</div>
+                          <button onClick={() => handleCopy(t, `title-${i}`)} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {copiedId === `title-${i}` ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-700 mb-2">Pinned Comment</h3>
+                    <div className="flex gap-2 relative group">
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-sm text-gray-800 flex-1">{seoData.pinned_comment}</div>
+                      <button onClick={() => handleCopy(seoData.pinned_comment, 'comment')} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {copiedId === 'comment' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-700 mb-2">Tags</h3>
+                    <div className="flex gap-2 relative group">
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 text-xs text-gray-600 flex-1 leading-relaxed">
+                        {seoData.tags?.join(', ')}
+                      </div>
+                      <button onClick={() => handleCopy(seoData.tags?.join(', '), 'tags')} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {copiedId === 'tags' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-bold text-gray-700 mb-2 flex justify-between items-center">
+                    YouTube Description
+                    <button onClick={() => handleCopy(seoData.description, 'desc')} className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold bg-indigo-50 px-2 py-1 rounded">
+                      {copiedId === 'desc' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                      {copiedId === 'desc' ? 'Copied' : 'Copy Full Description'}
+                    </button>
+                  </h3>
+                  <textarea 
+                    readOnly
+                    value={seoData.description}
+                    className="w-full h-80 bg-white border border-gray-200 rounded-lg p-4 text-sm text-gray-700 font-mono resize-none focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="mt-12 pt-6 border-t border-gray-200 flex justify-end">
+              <button 
+                onClick={() => setStep(9)}
+                className="px-8 py-4 bg-emerald-600 text-white font-bold rounded-xl shadow-md hover:bg-emerald-700 transition-all text-lg flex items-center gap-2"
+              >
+                Continue to Publish <Share2 className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-8">
@@ -155,7 +279,7 @@ export function Step8_RenderExport() {
               onClick={() => setStep(7)}
               className="px-6 py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold border border-gray-300 shadow-sm hover:bg-gray-200 transition-colors whitespace-nowrap"
             >
-              Back
+              Back to Thumbnail
             </button>
             <button 
               onClick={startLocalRender}

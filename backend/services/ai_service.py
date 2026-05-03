@@ -25,10 +25,10 @@ def build_system_prompt(niche_config: dict, style: str, duration_minutes: int) -
 Your goal is to generate content that dominates search rankings and maximizes CTR (Click-Through Rate).
 
 Guidelines for USA Audience (Ages 25-54):
-1. **Title**: Create a high-CTR, curiosity-driven title (under 60 chars). Use Power Words (e.g., Revealed, Warning, Secret, Proven).
+1. **Title**: Create a high-CTR, curiosity-driven title (MAXIMUM 100 characters, ideally under 60). Use Power Words (e.g., Revealed, Warning, Secret, Proven).
 2. **Hook**: The script must grab attention in the first 5 seconds with a high-stakes claim or question.
 3. **Structure**: Follow the PAS (Problem-Agitate-Solution) framework.
-4. **SEO Description**:
+4. **SEO Description** (MAXIMUM 800 characters total):
     - First 2 lines: Primary keywords + high-tension hook.
     - Timestamps: Chapter breakdown.
     - Hashtags: 3-5 trending USA-niche hashtags.
@@ -52,6 +52,7 @@ Structure:
   "description_disclaimer": "Niche-specific Dynamic Disclaimer + AI Disclosure.",
   "hashtags_string": "#tag1 #tag2 #tag3",
   "tags": ["high-volume-tag1", "trending-tag2"],
+  "pinned_comment": "Controversial or highly engaging pinned comment to drive early interaction",
   "hook": "First 30 seconds hook script",
   "cta": "Final CTA script",
   "scenes": [
@@ -136,7 +137,7 @@ async def call_gemini(system_prompt: str, user_prompt: str) -> dict:
     full_prompt = system_prompt + "\n\n" + user_prompt
     async with httpx.AsyncClient(timeout=60) as client:
         response = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={settings.GEMINI_API_KEY}",
             json={
                 "contents": [{"parts": [{"text": full_prompt}]}],
                 "generationConfig": {

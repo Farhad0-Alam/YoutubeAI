@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 function createGeminiClient() {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
@@ -6,7 +6,7 @@ function createGeminiClient() {
     throw new Error("Gemini API key is missing. Add NEXT_PUBLIC_GEMINI_API_KEY to .env or switch to OpenAI/Ollama.");
   }
 
-  return new GoogleGenAI({ apiKey });
+  return new GoogleGenerativeAI(apiKey);
 }
 
 export const api = {
@@ -108,15 +108,15 @@ Structure:
     } else {
       try {
         const ai = createGeminiClient();
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: prompt,
-          config: {
+        const model = ai.getGenerativeModel({ 
+          model: "gemini-2.0-flash",
+          generationConfig: {
             temperature: 0.8,
             responseMimeType: "application/json",
           }
         });
-        responseText = response.text || "{}";
+        const result = await model.generateContent(prompt);
+        responseText = result.response.text() || "{}";
       } catch (err: any) {
         if (err?.status === 429 || err?.message?.includes("exceeded") || err?.status === "RESOURCE_EXHAUSTED") {
           throw new Error("Gemini API Quota Exceeded. Please try again later or switch to OpenAI/Ollama in settings.");
@@ -289,12 +289,15 @@ Respond with valid JSON only. No markdown. Structure:
     } else {
       try {
         const ai = createGeminiClient();
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: prompt,
-          config: { temperature: 0.7, responseMimeType: "application/json" }
+        const model = ai.getGenerativeModel({ 
+          model: "gemini-2.0-flash",
+          generationConfig: {
+            temperature: 0.7,
+            responseMimeType: "application/json",
+          }
         });
-        responseText = response.text || "{}";
+        const result = await model.generateContent(prompt);
+        responseText = result.response.text() || "{}";
       } catch (err: any) {
         if (err?.status === 429 || err?.message?.includes("exceeded") || err?.status === "RESOURCE_EXHAUSTED") {
           throw new Error("Gemini API Quota Exceeded.");
@@ -366,14 +369,14 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
     } else {
       try {
         const ai = createGeminiClient();
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: data.systemPrompt + "\n\n" + prompt,
-          config: {
+        const model = ai.getGenerativeModel({ 
+          model: "gemini-2.0-flash",
+          generationConfig: {
             temperature: 0.7
           }
         });
-        responseText = response.text || "";
+        const result = await model.generateContent(data.systemPrompt + "\n\n" + prompt);
+        responseText = result.response.text() || "";
       } catch (err: any) {
         if (err?.status === 429 || err?.message?.includes("exceeded") || err?.status === "RESOURCE_EXHAUSTED") {
           throw new Error("Gemini API Quota Exceeded. Please try again later or switch to OpenAI/Ollama in settings.");
@@ -509,6 +512,28 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
     };
   },
 
+  async generateImage(data: { prompt: string }) {
+    const openAIKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
+    if (!openAIKey) throw new Error("OPENAI_API_KEY is not set for image generation");
+
+    const req = await fetch("/api/openai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "image",
+        key: openAIKey,
+        payload: { prompt: data.prompt, size: "1024x1024" }
+      })
+    });
+    
+    if (!req.ok) throw new Error("Image generation failed");
+    const resData = await req.json();
+    if (resData.data && resData.data.length > 0 && resData.data[0].url) {
+      return resData.data[0].url;
+    }
+    throw new Error("No image URL returned");
+  },
+
   async generateSEOPackage(data: { script: string; title: string; niche: string; llm_model?: string }) {
     const prompt = `You are an elite YouTube SEO strategist. Based on the following video script, generate a complete, highly-optimized YouTube metadata package.
     
@@ -521,7 +546,7 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
     Requirements:
     1. 3 highly clickable, emotional, or curiosity-driven titles (max 60 chars each).
     2. A keyword-rich description (first 2 lines must hook the viewer, include relevant links placeholders, and end with a call to action). DO NOT INCLUDE TIMESTAMPS in the description body (we will auto-generate them).
-    3. 15 viral tags (comma separated).
+    3. Generate enough viral tags so that their combined length (comma-separated) is strictly between 450 and 500 characters.
     4. 1 highly engaging or controversial pinned comment to drive early interaction.
 
     Respond with valid JSON only. No markdown. Structure:
@@ -557,12 +582,15 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
     } else {
       try {
         const ai = createGeminiClient();
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: prompt,
-          config: { temperature: 0.8, responseMimeType: "application/json" }
+        const model = ai.getGenerativeModel({ 
+          model: "gemini-2.0-flash",
+          generationConfig: {
+            temperature: 0.8,
+            responseMimeType: "application/json",
+          }
         });
-        responseText = response.text || "{}";
+        const result = await model.generateContent(prompt);
+        responseText = result.response.text() || "{}";
       } catch (err: any) {
         throw new Error("Failed to generate SEO with Gemini API.");
       }

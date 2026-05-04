@@ -1,12 +1,16 @@
 version: '3.8'
 
 services:
-  mongodb:
-    image: mongo:7
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: ytv_maker
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongodb_data:/data/db
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
   backend:
@@ -19,15 +23,14 @@ services:
       - ./temp:/app/temp
       - ./outputs:/app/outputs
     environment:
-      - MONGODB_URL=mongodb://mongodb:27017
-      - MONGODB_DB_NAME=ytv_maker
+      - DATABASE_URL=postgresql+asyncpg://myuser:mypassword@postgres:5432/ytv_maker
       - GROQ_API_KEY=${GROQ_API_KEY}
       - PEXELS_API_KEY=${PEXELS_API_KEY}
       - PIXABAY_API_KEY=${PIXABAY_API_KEY}
       - TEMP_DIR=/app/temp
       - OUTPUT_DIR=/app/outputs
     depends_on:
-      - mongodb
+      - postgres
     restart: unless-stopped
 
   frontend:
@@ -43,4 +46,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  mongodb_data:
+  postgres_data:

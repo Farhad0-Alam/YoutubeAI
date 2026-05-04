@@ -12,7 +12,7 @@ A complete, production-ready personal tool for generating faceless YouTube video
 
 ## Prerequisites
 - Docker & Docker Compose
-- Or locally: Python 3.11+, Node.js 18+, FFmpeg, MongoDB
+- Or locally: Python 3.11+, Node.js 18+, FFmpeg, PostgreSQL
 
 ## Setup Instructions (Docker)
 
@@ -33,9 +33,9 @@ A complete, production-ready personal tool for generating faceless YouTube video
 ## Setup Instructions (Local without Docker)
 
 ### System Requirements
-- **Windows**: Install [FFmpeg](https://ffmpeg.org/download.html) and add to PATH. Install MongoDB Community Server.
-- **Mac**: `brew install ffmpeg mongodb-community`
-- **Linux**: `sudo apt update && sudo apt install ffmpeg mongodb`
+- **Windows**: Install [FFmpeg](https://ffmpeg.org/download.html) and add to PATH. Install PostgreSQL.
+- **Mac**: `brew install ffmpeg postgresql`
+- **Linux**: `sudo apt update && sudo apt install ffmpeg postgresql`
 
 ### Backend Setup
 ```bash

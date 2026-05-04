@@ -46,6 +46,7 @@ export interface SubScene {
   camera_motion?: string;
   color_grading?: string;
   emotional_arc?: string;
+  preview_url?: string;
   
   // Detailed Image Breakdown
   image_subject?: string;

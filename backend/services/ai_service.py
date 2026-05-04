@@ -32,6 +32,7 @@ Guidelines for USA Audience (Ages 25-54):
     - First 2 lines: Primary keywords + high-tension hook.
     - Timestamps: Chapter breakdown.
     - Hashtags: 3-5 trending USA-niche hashtags.
+    - Tags: Generate enough relevant tags so that their combined length (comma-separated) is strictly between 450 and 500 characters.
     - **Dynamic Disclaimer** for niche '{niche_config.get("display_name")}':
         - Finance/Crypto/Investing: Financial Disclaimer (Not financial advice).
         - Health/Wellness/Fitness/Mental Health: Medical Disclaimer (Not medical advice).
@@ -137,7 +138,7 @@ async def call_gemini(system_prompt: str, user_prompt: str) -> dict:
     full_prompt = system_prompt + "\n\n" + user_prompt
     async with httpx.AsyncClient(timeout=60) as client:
         response = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={settings.GEMINI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={settings.GEMINI_API_KEY}",
             json={
                 "contents": [{"parts": [{"text": full_prompt}]}],
                 "generationConfig": {

@@ -17,7 +17,7 @@ if imageio_ffmpeg:
 class Settings:
     # Script Generation APIs
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("NEXT_PUBLIC_OPENAI_API_KEY")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("NEXT_PUBLIC_GEMINI_API_KEY")
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
     XAI_API_KEY = os.getenv("XAI_API_KEY")

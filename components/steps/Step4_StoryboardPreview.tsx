@@ -10,6 +10,7 @@ export function Step4_StoryboardPreview() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generatingScene, setGeneratingScene] = useState<number | null>(null);
   const [generatingAll, setGeneratingAll] = useState(false);
+  const [generatingImages, setGeneratingImages] = useState<Record<string, boolean>>({});
   const [voiceToggles, setVoiceToggles] = useState<Record<string, boolean>>({});
   const [textToggles, setTextToggles] = useState<Record<string, boolean>>({});
   const [chunkInterval, setChunkInterval] = useState<number>(2);
@@ -50,6 +51,27 @@ export function Step4_StoryboardPreview() {
     }
   };
 
+  const handleGeneratePreviewImage = async (sceneIdx: number, subIdx: number) => {
+    if (!scriptData) return;
+    const key = `${sceneIdx}-${subIdx}`;
+    const prompt = buildFullSubSceneImagePrompt(sceneIdx, subIdx);
+    if (!prompt) {
+      toast.error('No image prompt to generate from.');
+      return;
+    }
+
+    setGeneratingImages(prev => ({ ...prev, [key]: true }));
+    try {
+      const url = await api.generateImage({ prompt });
+      handleSubSceneUpdate(sceneIdx, subIdx, 'preview_url', url);
+      toast.success('Preview image generated!');
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to generate preview image');
+    } finally {
+      setGeneratingImages(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
   const handleGenerateAll = async () => {
     if (!scriptData) return;
     setGeneratingAll(true);
@@ -81,29 +103,29 @@ export function Step4_StoryboardPreview() {
     if (!scriptData) return "";
     const scene = scriptData.scenes[sceneIdx] as any;
     const sub = (scene.sub_scenes?.[subIdx] as any) || {};
-    
+
     let styleStr = 'Cinematic realism, 4K, 60fps, teal-orange grade, high quality';
     const aspectRatio = project?.aspect_ratio || '16:9';
     const aiModel = project?.ai_model || 'seedance2.0';
 
     if (aiModel === 'seedance2.0') {
-       styleStr += ` --ar ${aspectRatio} --v 2.0`;
+      styleStr += ` --ar ${aspectRatio} --v 2.0`;
     } else if (aiModel === 'veo3.1') {
-       styleStr = `Highly realistic, cinematic lighting, Veo 3.1 optimization, aspect ratio ${aspectRatio}`;
+      styleStr = `Highly realistic, cinematic lighting, Veo 3.1 optimization, aspect ratio ${aspectRatio}`;
     } else if (aiModel === 'kling_v1.5') {
-       styleStr = `Masterpiece, best quality, cinematography, Kling v1.5, aspect ratio ${aspectRatio}`;
+      styleStr = `Masterpiece, best quality, cinematography, Kling v1.5, aspect ratio ${aspectRatio}`;
     } else if (aiModel === 'midjourney_v6') {
-       styleStr = `--ar ${aspectRatio} --v 6.0 --style raw`;
+      styleStr = `--ar ${aspectRatio} --v 6.0 --style raw`;
     } else if (aiModel === 'runway_gen3') {
-       styleStr = `Gen-3 Alpha, hyperrealistic, dynamic motion, aspect ratio ${aspectRatio}`;
+      styleStr = `Gen-3 Alpha, hyperrealistic, dynamic motion, aspect ratio ${aspectRatio}`;
     } else if (aiModel === 'sora') {
-       styleStr = `OpenAI Sora, photorealistic, highly detailed, smooth motion, 4k resolution`;
+      styleStr = `OpenAI Sora, photorealistic, highly detailed, smooth motion, 4k resolution`;
     } else if (aiModel === 'grok2') {
-       styleStr = `Grok 2.0 rendering, highly cinematic, detailed textures, vivid lighting, ratio ${aspectRatio}`;
+      styleStr = `Grok 2.0 rendering, highly cinematic, detailed textures, vivid lighting, ratio ${aspectRatio}`;
     }
 
     const basePrompt = sub.video_prompt?.trim() || sub.image_prompt?.trim() || scene.visual_description?.trim() || '';
-    
+
     let prompt = '';
     if (aiModel === 'midjourney_v6') {
       prompt = `/imagine prompt: ${basePrompt}, highly detailed cinematic photography, 8k resolution ${styleStr}`;
@@ -152,7 +174,7 @@ export function Step4_StoryboardPreview() {
     if (!scriptData) return "";
     const scene = scriptData.scenes[sceneIdx] as any;
     const sub = (scene.sub_scenes?.[subIdx] as any) || {};
-    
+
     const subject = sub.image_subject || scene.image_subject || '';
     const setting = sub.image_setting || scene.image_setting || '';
     const mood = sub.image_mood || scene.image_mood || '';
@@ -180,7 +202,7 @@ export function Step4_StoryboardPreview() {
     const negativePrompt = sub.image_negative_prompt || scene.image_negative_prompt || '';
 
     const suffixes = [aspectRatio, seed, quality, characterRef, negativePrompt].filter(Boolean).join(' ');
-    
+
     return `${newPrompt}. ${suffixes}`.trim();
   };
 
@@ -190,7 +212,7 @@ export function Step4_StoryboardPreview() {
     const words = text.split(/\s+/).filter(w => w.trim().length > 0);
     const result: string[] = Array(n).fill('');
     if (words.length === 0) return result;
-    
+
     // Distribute words evenly
     const wordsPerChunk = Math.ceil(words.length / n);
     for (let i = 0; i < n; i++) {
@@ -246,7 +268,7 @@ export function Step4_StoryboardPreview() {
   };
 
   const GlobalBtn = ({ onClick }: { onClick: () => void }) => (
-    <button 
+    <button
       onClick={onClick}
       className="ml-auto opacity-0 group-hover:opacity-100 text-[8px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded transition-all border border-indigo-100 uppercase tracking-wider"
       title="Apply this value to all sub-scenes globally"
@@ -265,7 +287,7 @@ export function Step4_StoryboardPreview() {
           Storyboard Preview
         </h2>
         <p className="text-sm sm:text-base text-gray-500">Every sub-scene has its own narration, prompts, and production details for precise AI video generation.</p>
-        
+
         <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
@@ -286,11 +308,11 @@ export function Step4_StoryboardPreview() {
               }}
               className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
               Export PDF
             </button>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="flex bg-gray-100 rounded-lg p-1 border border-gray-200 shadow-inner">
               <button
@@ -306,42 +328,42 @@ export function Step4_StoryboardPreview() {
                 Pro Mode
               </button>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Clip Length:</span>
-            <div className="flex bg-white rounded-lg border border-gray-200 shadow-sm p-1">
-              <button 
-                onClick={() => setChunkInterval(1)} 
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${chunkInterval === 1 ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                title="Action mode (1s) - High density prompts"
-              >
-                1s (Action)
-              </button>
-              <button 
-                onClick={() => setChunkInterval(2)} 
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${chunkInterval === 2 ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                title="Standard mode (2s) - Industry standard default"
-              >
-                2s (Default)
-              </button>
-              <button 
-                onClick={() => setChunkInterval(3)} 
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${chunkInterval === 3 ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                title="Paced mode (3s) - Slightly slower pacing"
-              >
-                3s (Paced)
-              </button>
-              <button 
-                onClick={() => setChunkInterval(4)} 
-                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${chunkInterval === 4 ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                title="Dialogue mode (4s) - Longer, establishing shots"
-              >
-                4s (Dialogue)
-              </button>
+              <div className="flex bg-white rounded-lg border border-gray-200 shadow-sm p-1">
+                <button
+                  onClick={() => setChunkInterval(1)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${chunkInterval === 1 ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                  title="Action mode (1s) - High density prompts"
+                >
+                  1s (Action)
+                </button>
+                <button
+                  onClick={() => setChunkInterval(2)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${chunkInterval === 2 ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                  title="Standard mode (2s) - Industry standard default"
+                >
+                  2s (Default)
+                </button>
+                <button
+                  onClick={() => setChunkInterval(3)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${chunkInterval === 3 ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                  title="Paced mode (3s) - Slightly slower pacing"
+                >
+                  3s (Paced)
+                </button>
+                <button
+                  onClick={() => setChunkInterval(4)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${chunkInterval === 4 ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                  title="Dialogue mode (4s) - Longer, establishing shots"
+                >
+                  4s (Dialogue)
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
 
       <div className="p-4 sm:p-8 pb-32 space-y-10">
@@ -349,7 +371,7 @@ export function Step4_StoryboardPreview() {
           const totalSeconds = scene.duration_seconds || 15;
           const numSubScenes = scene.sub_scenes?.length || Math.max(1, Math.ceil(totalSeconds / chunkInterval));
           const actualInterval = scene.sub_scenes?.length ? (totalSeconds / scene.sub_scenes.length).toFixed(1) : chunkInterval;
-          
+
           const subScenes = Array.from({ length: numSubScenes }).map((_, i) => {
             const start = Math.floor(i * (totalSeconds / numSubScenes));
             const end = Math.floor((i + 1) * (totalSeconds / numSubScenes));
@@ -411,7 +433,7 @@ export function Step4_StoryboardPreview() {
                     const emo = d?.emotional_arc || scene.emotional_arc || '';
                     const hasAiPrompts = !!d?.image_prompt;
                     const pre = `${index}-${sub.id}`;
-                    
+
                     // No fallbacks for detailed options; must be generated newly
                     const fallbackSubject = '';
                     const fallbackSetting = '';
@@ -433,17 +455,41 @@ export function Step4_StoryboardPreview() {
                             </div>
 
                             {/* Image Preview Slot */}
-                            <div className="w-full aspect-video bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-lg flex flex-col items-center justify-center overflow-hidden relative group/img cursor-pointer hover:bg-indigo-50 transition-colors mb-4">
-                              <ImageIcon className="w-8 h-8 text-indigo-300 mb-2 group-hover/img:scale-110 transition-transform" />
-                              <span className="text-xs font-semibold text-indigo-600">Image Preview Slot</span>
-                              <span className="text-[10px] text-indigo-400">Click to upload or generate image</span>
+                            <div
+                              onClick={() => {
+                                if (hasAiPrompts && !generatingImages[pre]) {
+                                  handleGeneratePreviewImage(index, subIdx);
+                                } else if (!hasAiPrompts) {
+                                  toast.error('Generate prompts first!');
+                                }
+                              }}
+                              className={`w-full aspect-video ${d?.preview_url ? 'bg-black' : 'bg-indigo-50/50'} border-2 ${d?.preview_url ? 'border-indigo-500' : 'border-dashed border-indigo-200'} rounded-lg flex flex-col items-center justify-center overflow-hidden relative group/img ${hasAiPrompts ? 'cursor-pointer hover:bg-indigo-50' : 'cursor-not-allowed opacity-60'} transition-colors mb-4`}
+                            >
+                              {d?.preview_url ? (
+                                <img src={d.preview_url} alt="Preview" className="w-full h-full object-cover" />
+                              ) : (
+                                <>
+                                  {generatingImages[pre] ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+                                      <span className="text-xs font-semibold text-indigo-600">Generating with DALL-E 3...</span>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <ImageIcon className="w-8 h-8 text-indigo-300 mb-2 group-hover/img:scale-110 transition-transform" />
+                                      <span className="text-xs font-semibold text-indigo-600">Image Preview Slot</span>
+                                      <span className="text-[10px] text-indigo-400">Click to generate using ChatGPT API</span>
+                                    </>
+                                  )}
+                                </>
+                              )}
                             </div>
 
                             <div className="relative group">
                               <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                                 Image Prompt
                                 {!hasAiPrompts && (
-                                  <button 
+                                  <button
                                     onClick={() => handleGenerateSubScenes(index)}
                                     disabled={generatingScene === index}
                                     className="text-[9px] text-indigo-400 normal-case hover:text-indigo-700 hover:bg-indigo-50 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 disabled:opacity-50"
@@ -486,52 +532,52 @@ export function Step4_StoryboardPreview() {
                             {/* Detailed Image Breakdown Options */}
                             {isProMode && (
                               <div className="pt-3 border-t border-indigo-100/50">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider">Detailed Image Options</div>
-                                <button 
-                                  onClick={() => handleCopy(buildFullSubSceneImagePrompt(index, subIdx), `img-full-${pre}`)}
-                                  className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded text-[10px] font-semibold transition-colors"
-                                >
-                                  {copiedId === `img-full-${pre}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                                  {copiedId === `img-full-${pre}` ? 'Copied!' : 'Copy Full Image Prompt'}
-                                </button>
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider">Detailed Image Options</div>
+                                  <button
+                                    onClick={() => handleCopy(buildFullSubSceneImagePrompt(index, subIdx), `img-full-${pre}`)}
+                                    className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded text-[10px] font-semibold transition-colors"
+                                  >
+                                    {copiedId === `img-full-${pre}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                    {copiedId === `img-full-${pre}` ? 'Copied!' : 'Copy Full Image Prompt'}
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  {[
+                                    ['Subject', 'image_subject'],
+                                    ['Setting / Background', 'image_setting'],
+                                    ['Mood', 'image_mood'],
+                                    ['Lighting Style', 'image_lighting'],
+                                    ['Color Grade', 'image_color_grade'],
+                                    ['Camera Angle', 'image_camera_angle'],
+                                    ['Shot Type', 'image_shot_type'],
+                                    ['Style Modifier', 'image_style_modifier'],
+                                    ['Aspect Ratio', 'image_aspect_ratio'],
+                                    ['Seed', 'image_seed'],
+                                    ['Quality Suffix', 'image_quality'],
+                                    ['Character Ref', 'image_character_consistency'],
+                                    ['Negative Prompt', 'image_negative_prompt'],
+                                  ].map(([label, key]) => (
+                                    <div key={key} className="relative group flex flex-col">
+                                      <label className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center">
+                                        {label}
+                                        <GlobalBtn onClick={() => handleApplyToAll(key, (d as any)?.[key] || (scene as any)?.[key] || (key === 'image_subject' ? fallbackSubject : key === 'image_setting' ? fallbackSetting : ''), label)} />
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={
+                                          (d as any)?.[key] ||
+                                          (scene as any)?.[key] ||
+                                          (key === 'image_subject' ? fallbackSubject :
+                                            key === 'image_setting' ? fallbackSetting : '')
+                                        }
+                                        onChange={(e) => handleSubSceneUpdate(index, subIdx, key as any, e.target.value)}
+                                        className="w-full bg-white border border-gray-200 rounded px-2 py-1.5 text-[11px] text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="grid grid-cols-2 gap-3">
-                                {[
-                                  ['Subject', 'image_subject'],
-                                  ['Setting / Background', 'image_setting'],
-                                  ['Mood', 'image_mood'],
-                                  ['Lighting Style', 'image_lighting'],
-                                  ['Color Grade', 'image_color_grade'],
-                                  ['Camera Angle', 'image_camera_angle'],
-                                  ['Shot Type', 'image_shot_type'],
-                                  ['Style Modifier', 'image_style_modifier'],
-                                  ['Aspect Ratio', 'image_aspect_ratio'],
-                                  ['Seed', 'image_seed'],
-                                  ['Quality Suffix', 'image_quality'],
-                                  ['Character Ref', 'image_character_consistency'],
-                                  ['Negative Prompt', 'image_negative_prompt'],
-                                ].map(([label, key]) => (
-                                  <div key={key} className="relative group flex flex-col">
-                                    <label className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center">
-                                      {label}
-                                      <GlobalBtn onClick={() => handleApplyToAll(key, (d as any)?.[key] || (scene as any)?.[key] || (key === 'image_subject' ? fallbackSubject : key === 'image_setting' ? fallbackSetting : ''), label)} />
-                                    </label>
-                                    <input 
-                                      type="text" 
-                                      value={
-                                        (d as any)?.[key] || 
-                                        (scene as any)?.[key] || 
-                                        (key === 'image_subject' ? fallbackSubject : 
-                                         key === 'image_setting' ? fallbackSetting : '')
-                                      } 
-                                      onChange={(e) => handleSubSceneUpdate(index, subIdx, key as any, e.target.value)} 
-                                      className="w-full bg-white border border-gray-200 rounded px-2 py-1.5 text-[11px] text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400" 
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
                             )}
                           </div>
 
@@ -547,7 +593,7 @@ export function Step4_StoryboardPreview() {
                                 <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider flex items-center gap-1.5">
                                   <Camera className="w-3 h-3" /> Video Prompt
                                   {!hasAiPrompts && (
-                                    <button 
+                                    <button
                                       onClick={() => handleGenerateSubScenes(index)}
                                       disabled={generatingScene === index}
                                       className="text-[9px] text-indigo-400 normal-case hover:text-indigo-700 hover:bg-indigo-50 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 disabled:opacity-50"
@@ -624,11 +670,11 @@ export function Step4_StoryboardPreview() {
                                 <Type className="w-4 h-4 text-indigo-600" />
                                 <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">TEXT OVERLAY & EFFECTS</h3>
                               </div>
-                              
+
                               <div className="space-y-4">
                                 <div>
                                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">TEXT OVERLAY / CAPTIONS</label>
-                                  <textarea 
+                                  <textarea
                                     value={txt}
                                     onChange={(e) => handleSubSceneUpdate(index, subIdx, 'text_overlay', e.target.value)}
                                     className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 min-h-[60px] resize-y"
@@ -640,7 +686,7 @@ export function Step4_StoryboardPreview() {
                                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     <div>
                                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">TEXT POSITION</label>
-                                      <select 
+                                      <select
                                         value={(d as any)?.text_position || ''}
                                         onChange={(e) => handleSubSceneUpdate(index, subIdx, 'text_position', e.target.value)}
                                         className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -659,7 +705,7 @@ export function Step4_StoryboardPreview() {
                                     </div>
                                     <div>
                                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">TEXT ANIMATION & GLOW</label>
-                                      <select 
+                                      <select
                                         value={(d as any)?.text_animation || ''}
                                         onChange={(e) => handleSubSceneUpdate(index, subIdx, 'text_animation', e.target.value)}
                                         className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -699,7 +745,7 @@ export function Step4_StoryboardPreview() {
                                     </div>
                                     <div>
                                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">TEXT BOX / BACKGROUND STYLE</label>
-                                      <select 
+                                      <select
                                         value={(d as any)?.text_box_style || ''}
                                         onChange={(e) => handleSubSceneUpdate(index, subIdx, 'text_box_style', e.target.value)}
                                         className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -729,12 +775,12 @@ export function Step4_StoryboardPreview() {
                                 {isProMode && (
                                   <div>
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">SOUND EFFECT (SFX)</label>
-                                    <input 
-                                      type="text" 
-                                      value={snd} 
+                                    <input
+                                      type="text"
+                                      value={snd}
                                       onChange={(e) => handleSubSceneUpdate(index, subIdx, 'sound', e.target.value)}
-                                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" 
-                                      placeholder="Deep, rumbling ambient sound..." 
+                                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                      placeholder="Deep, rumbling ambient sound..."
                                     />
                                   </div>
                                 )}
@@ -777,28 +823,28 @@ export function Step4_StoryboardPreview() {
                             {/* Detailed Video Breakdown Options */}
                             {isProMode && (
                               <div className="pt-3 border-t border-emerald-100/50">
-                              <div className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider mb-3">Detailed Video Options</div>
-                              <div className="grid grid-cols-2 gap-3">
-                                {[
-                                  ['Timing & Pacing', 'timing_and_pacing'],
-                                  ['Transition', 'transition'],
-                                  ['CTA Cue', 'call_to_action_cue']
-                                ].map(([label, key]) => (
-                                  <div key={key} className="relative group flex flex-col">
-                                    <label className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center">
-                                      {label}
-                                      <GlobalBtn onClick={() => handleApplyToAll(key, (d as any)?.[key] || (scene as any)?.[key] || '', label)} />
-                                    </label>
-                                    <input 
-                                      type="text" 
-                                      value={(d as any)?.[key] || (scene as any)?.[key] || ''} 
-                                      onChange={(e) => handleSubSceneUpdate(index, subIdx, key as any, e.target.value)} 
-                                      className="w-full bg-white border border-gray-200 rounded px-2 py-1.5 text-[11px] text-gray-700 focus:outline-none focus:ring-1 focus:ring-emerald-400" 
-                                    />
-                                  </div>
-                                ))}
+                                <div className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider mb-3">Detailed Video Options</div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  {[
+                                    ['Timing & Pacing', 'timing_and_pacing'],
+                                    ['Transition', 'transition'],
+                                    ['CTA Cue', 'call_to_action_cue']
+                                  ].map(([label, key]) => (
+                                    <div key={key} className="relative group flex flex-col">
+                                      <label className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center">
+                                        {label}
+                                        <GlobalBtn onClick={() => handleApplyToAll(key, (d as any)?.[key] || (scene as any)?.[key] || '', label)} />
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={(d as any)?.[key] || (scene as any)?.[key] || ''}
+                                        onChange={(e) => handleSubSceneUpdate(index, subIdx, key as any, e.target.value)}
+                                        className="w-full bg-white border border-gray-200 rounded px-2 py-1.5 text-[11px] text-gray-700 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
                             )}
                           </div>
                         </div>

@@ -288,7 +288,7 @@ export function Step1_NicheTopic() {
               onChange={(e) => setLlmModel(e.target.value)}
               className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
             >
-              <option value="gemini">Google Gemini 2.5 (Fast & Free)</option>
+              <option value="gemini">Google Gemini 2.0 (Fast & Free)</option>
               <option value="openai">OpenAI GPT-4o (Premium)</option>
               <option value="qwen">Alibaba Qwen-Max (Premium)</option>
               <option value="ollama">Ollama (Local / Custom Model)</option>

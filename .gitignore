@@ -44,3 +44,5 @@ Thumbs.db
 backend/database/postgres.py.bak
 *.db
 *.sqlite3
+*.zip
+outputs/temp/

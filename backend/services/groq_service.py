@@ -9,23 +9,51 @@ logger = logging.getLogger(__name__)
 client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 
 async def generate_script(niche_config, topic, duration_minutes, style, extra_instructions):
-    system_prompt = f"""You are a top-tier YouTube SEO expert and Content Strategist for high-CPM USA-based channels. 
-Your goal is to generate content that dominates search rankings and maximizes CTR (Click-Through Rate).
+    system_prompt = f"""You are a top-tier YouTube SEO expert, Content Strategist, AND Voice Production Director for high-CPM USA-based channels.
+Your goal is to generate content that dominates search rankings, maximizes CTR, AND produces broadcast-quality voice scripts.
 
 Guidelines for USA Audience (Ages 25-54):
 1. **Title**: Create a high-CTR, curiosity-driven title (MAXIMUM 100 characters, ideally under 60). Use "Power Words" (e.g., Revealed, Warning, Secret, Proven).
 2. **Hook**: The script must grab attention in the first 5 seconds with a high-stakes claim or question.
-3. **Structure**: Follow the PAS (Problem-Agitate-Solution) framework. 
-4. **SEO Description** (MAXIMUM 800 characters total): 
+3. **Structure**: Follow the PAS (Problem-Agitate-Solution) framework.
+4. **SEO Description** (MAXIMUM 800 characters total):
     - First 2 lines: Primary keywords + high-tension hook.
     - Timestamps: Chapter breakdown.
     - Hashtags: 3-5 trending USA-niche hashtags.
-    - **Dynamic Disclaimer**: Generate a professional disclaimer tailored to the niche '{niche_config.get('display_name')}':
-        - For Finance/Crypto/Investing: Include a clear Financial Disclaimer (Not financial advice).
-        - For Health/Wellness/Fitness/Mental Health: Include a clear Medical Disclaimer (Not medical advice).
-        - For Legal/Law: Include a clear Legal Disclaimer (Not legal advice).
-        - For all others: Include a General Information Disclaimer.
-        - **MANDATORY FOR ALL**: State clearly that "Some assets and voices in this video are AI-generated to enhance the storytelling experience."
+    - **Dynamic Disclaimer** for niche '{niche_config.get('display_name')}':
+        - Finance/Crypto/Investing: Financial Disclaimer (Not financial advice).
+        - Health/Wellness/Fitness/Mental Health: Medical Disclaimer (Not medical advice).
+        - Legal/Law: Legal Disclaimer (Not legal advice).
+        - All others: General Information Disclaimer.
+        - **MANDATORY**: "Some assets and voices in this video are AI-generated."
+
+═══════════════════════════════════════════════════════════════
+VOICE & WORD BUDGET RULES (MANDATORY — STRICTLY ENFORCE):
+═══════════════════════════════════════════════════════════════
+Formula:
+  usable_seconds = clip_duration × (1 - breath_overhead)
+  max_words      = usable_seconds × (WPM ÷ 60)
+  safe_range     = 75%–100% of max_words
+
+Scene-Type Presets (auto-apply based on scene position):
+  • Scene 1 (Hook): WPM=165, breath=25% → Use [excited] or [urgent] emotion
+  • Middle scenes (Body): WPM=150, breath=30% → Use [confident], [dramatic], or [curious] emotion
+  • Final scene (CTA): WPM=130, breath=35% → Use [calm] or [warm] emotion
+
+Quick Word Count Reference:
+  4s → 8–10 words  |  5s → 9–13 words   |  6s → 11–15 words
+  7s → 13–17 words |  8s → 14–19 words  |  9s → 16–21 words
+  10s → 17–23 words | 12s → 20–27 words | 15s → 26–35 words
+
+VOICE RULES:
+1. EVERY narration MUST start with an emotion tag: [excited], [dramatic], [calm], [urgent], [whisper], [confident], [curious], [angry], [sad], [terrified], [happy], [warm]
+2. Narration word count MUST fall within the safe_range for the scene's duration_seconds
+3. Scene 1 (Hook) MUST use [excited] or [urgent] with tight word count
+4. Final scene (CTA) MUST use [calm] or [warm] with breathing room
+5. NEVER repeat the same emotion tag on consecutive scenes — vary the emotional arc
+6. Sound effects MUST be specific Foley descriptions — NOT generic
+7. Music MUST specify: genre, BPM range, instrument focus, energy level
+═══════════════════════════════════════════════════════════════
 
 Script style: {style}
 Niche tone: {niche_config.get('script_tone')}
@@ -46,10 +74,10 @@ Structure:
   "scenes": [
     {{
       "scene_number": 1,
-      "duration_seconds": 15,
-      "narration": "Full voiceover text for this scene",
-      "voice_tone": "Urgent/Calm/Curious",
-      "text_overlay": "Short caption max 8 words",
+      "duration_seconds": 10,
+      "narration": "[excited] Exactly 17-23 words of voiceover for a 10s clip, starting with the emotion tag",
+      "voice_tone": "Excited",
+      "text_overlay": "Short caption max 6 words",
       "visual_description": "Cinematic visual description",
       "search_keyword": "precise search term for Pexels",
       "image_prompt": "Ultra-detailed cinematic prompt for high-quality AI images",
@@ -65,8 +93,8 @@ Structure:
       "transition": "transition style between clips",
       "camera_motion": "Explicit camera directions e.g. fast horizontal pan",
       "color_grading": "Color grading intent",
-      "sound": "Specific Foley/SFX (e.g., heavy bass impact)",
-      "music": "Music track style and pacing",
+      "sound": "Specific Foley SFX, e.g. 'Low rumbling bass drop with glass shattering reverb'",
+      "music": "Genre, BPM, instruments, energy, e.g. 'Cinematic orchestral, 90 BPM, strings + brass, tension rising'",
       "timing_and_pacing": "Sub-scene breakdown of timing"
     }}
   ],

@@ -8,12 +8,13 @@ import { VideoPromptEditor } from './VideoPromptEditor';
 interface SceneCardProps {
   scene: Scene;
   index: number;
+  totalScenes?: number;
   onUpdate: (data: Partial<Scene>) => void;
   onRegenerate?: () => void;
   isRegenerating?: boolean;
 }
 
-export function SceneCard({ scene, index, onUpdate, onRegenerate, isRegenerating }: SceneCardProps) {
+export function SceneCard({ scene, index, totalScenes, onUpdate, onRegenerate, isRegenerating }: SceneCardProps) {
   const { project } = useVideoStore();
 
   return (
@@ -96,6 +97,8 @@ export function SceneCard({ scene, index, onUpdate, onRegenerate, isRegenerating
           <VideoPromptEditor
             scene={scene}
             onUpdate={onUpdate}
+            sceneIndex={index}
+            totalScenes={totalScenes}
           />
         </div>
     </div>

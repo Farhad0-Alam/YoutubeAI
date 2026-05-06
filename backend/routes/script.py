@@ -11,6 +11,7 @@ class GenerateRequest(BaseModel):
     topic: str
     duration_minutes: int
     script_style: str
+    scene_length: Optional[int] = 15
     extra_instructions: str = ""
     voice_gender: str = "Male"
     llm_model: Optional[str] = "groq"   # groq | openai | gemini | claude | grok
@@ -26,6 +27,7 @@ async def api_generate_script(request: GenerateRequest):
             niche_config=niche_config,
             topic=request.topic,
             duration_minutes=request.duration_minutes,
+            scene_length=request.scene_length,
             style=request.script_style,
             extra_instructions=request.extra_instructions,
             llm_model=request.llm_model or "groq"
@@ -60,8 +62,32 @@ async def api_generate_script(request: GenerateRequest):
         script_data["llm_model_used"] = request.llm_model
 
         return script_data
+    except Exception as e:
+        print(f"Error generating script: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+class RewriteSceneRequest(BaseModel):
+    niche_id: str
+    topic: str
+    scene_data: dict
+    instructions: str = "Improve this scene"
+    llm_model: Optional[str] = "groq"
+
+@router.post("/rewrite_scene")
+async def api_rewrite_scene(request: RewriteSceneRequest):
+    niche_config = next((n for n in NICHE_CONFIGS if n["niche_id"] == request.niche_id), None)
+    if not niche_config:
+        raise HTTPException(status_code=400, detail=f"Invalid niche_id: {request.niche_id}")
+
+    try:
+        from backend.services.ai_service import rewrite_scene_content
+        revised_scene = await rewrite_scene_content(
+            niche_config=niche_config,
+            topic=request.topic,
+            scene_data=request.scene_data,
+            instructions=request.instructions,
+            llm_model=request.llm_model or "groq"
+        )
+        return revised_scene
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

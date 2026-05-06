@@ -45,4 +45,8 @@ backend/database/postgres.py.bak
 *.db
 *.sqlite3
 *.zip
-outputs/temp/
+outputs/
+backend/venv_new/
+temp/
+.venv/
+venv/

@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { Scene } from '../../types';
 import { Copy, Check, Film } from 'lucide-react';
 import { useVideoStore } from '../../store/videoStore';
+import { NarrationEditor } from './NarrationEditor';
 
 interface VideoPromptEditorProps {
   scene: Scene;
   onUpdate: (data: Partial<Scene>) => void;
+  sceneIndex?: number;
+  totalScenes?: number;
 }
 
-export function VideoPromptEditor({ scene, onUpdate }: VideoPromptEditorProps) {
+export function VideoPromptEditor({ scene, onUpdate, sceneIndex = 0, totalScenes = 1 }: VideoPromptEditorProps) {
   const [copied, setCopied] = useState(false);
   const [includeVoice, setIncludeVoice] = useState(true);
   const [includeTextOverlay, setIncludeTextOverlay] = useState(true);
@@ -112,8 +115,17 @@ export function VideoPromptEditor({ scene, onUpdate }: VideoPromptEditorProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
+    return (
     <div className="mt-6">
+      {/* Voice / Narration — Always visible for editing */}
+      <NarrationEditor 
+        value={scene.narration || ''}
+        onChange={(val) => onUpdate({ narration: val })}
+        clipDuration={scene.duration_seconds}
+        sceneIndex={sceneIndex}
+        totalScenes={totalScenes}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-6">
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Video Search Keyword</label>
@@ -186,17 +198,6 @@ export function VideoPromptEditor({ scene, onUpdate }: VideoPromptEditorProps) {
               </button>
             </div>
           </div>
-
-          {scene.narration && (
-            <div>
-              <label className="text-xs uppercase tracking-wider font-bold text-orange-600 mb-2 flex items-center gap-2">
-                Voice / Narration
-              </label>
-              <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100 text-sm text-gray-700">
-                {scene.narration}
-              </div>
-            </div>
-          )}
         </div>
       )}
 

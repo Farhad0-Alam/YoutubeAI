@@ -142,6 +142,7 @@ Structure:
     topic: string;
     duration_minutes: number;
     script_style: string;
+    scene_length?: number;
     extra_instructions?: string;
     llm_model?: string;
   }) {
@@ -155,6 +156,7 @@ Structure:
           topic: data.topic,
           duration_minutes: data.duration_minutes,
           script_style: data.script_style,
+          scene_length: data.scene_length || 15,
           extra_instructions: data.extra_instructions || "",
           llm_model: data.llm_model || "groq"
         })
@@ -169,6 +171,39 @@ Structure:
     } catch (error: any) {
       console.error("Backend Script Generation Error:", error);
       throw new Error(error.message || "Failed to generate script via backend");
+    }
+  },
+
+  async rewriteScene(data: {
+    niche_id: string;
+    topic: string;
+    scene_data: any;
+    instructions?: string;
+    llm_model?: string;
+  }) {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    try {
+      const response = await fetch(`${backendUrl}/api/rewrite_scene`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          niche_id: data.niche_id,
+          topic: data.topic,
+          scene_data: data.scene_data,
+          instructions: data.instructions || "Improve this scene",
+          llm_model: data.llm_model || "groq"
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Scene Rewrite Failed (${response.status}): ${errText}`);
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      console.error("Backend Scene Rewrite Error:", error);
+      throw new Error(error.message || "Failed to rewrite scene via backend");
     }
   },
 
@@ -194,7 +229,7 @@ Structure:
     const style = data.visual_style || 'cinematic';
     const ratio = data.aspect_ratio || '16:9';
 
-    const prompt = `You are an elite cinematic visual director for AI video production.
+    const prompt = `You are an elite cinematic visual director AND Voice Production Director for AI video production.
 
 PROJECT OVERVIEW:
 - Topic: ${data.topic || 'N/A'}
@@ -219,7 +254,34 @@ KEYWORDS: ${data.search_keyword}
 
 TASK: Split this scene into exactly ${numSubScenes} sub-scenes for AI video production.
 
-RULES:
+═══════════════════════════════════════════════════════════════
+VOICE & WORD BUDGET RULES (MANDATORY — STRICTLY ENFORCE):
+═══════════════════════════════════════════════════════════════
+Formula:
+  usable_seconds = sub_scene_duration × (1 - breath_overhead)
+  max_words      = usable_seconds × (WPM ÷ 60)
+  safe_range     = 75%–100% of max_words
+
+Voice Presets:
+  • WPM=150, breath_overhead=30% (default for body clips)
+  • Hook sub-scenes (first sub-scene): WPM=165, breath=25%
+  • Closing sub-scenes (last sub-scene): WPM=130, breath=35%
+
+Quick Word Count Reference per Sub-scene:
+  2s → 3–4 words  |  3s → 5–7 words   |  4s → 8–10 words
+  5s → 9–13 words |  6s → 11–15 words  |  7s → 13–17 words
+  8s → 14–19 words
+
+VOICE RULES:
+1. EVERY narration MUST start with an emotion tag: [excited], [dramatic], [calm], [urgent], [whisper], [confident], [curious], [happy], [warm]
+2. Narration word count MUST match the safe_range for the sub-scene duration
+3. If the parent scene narration already has an emotion tag, preserve it on the first sub-scene
+4. NEVER repeat the same emotion on consecutive sub-scenes — build an emotional arc
+5. Sound effects MUST be specific Foley — NOT generic. Example: "Soft paper rustling with distant thunder rumble" NOT "ambient sound"
+6. Music MUST specify: genre, BPM, instruments, energy. Example: "Lo-fi jazz, 85 BPM, muted trumpet + vinyl crackle, mellow" NOT "background music"
+═══════════════════════════════════════════════════════════════
+
+VISUAL RULES:
 1. SPLIT the narration evenly — each sub-scene gets 1-2 sentences from the narration IN ORDER
 2. Image prompts must be hyper-detailed, cinematic, production-ready for ${aiTool}. Include: subject, environment, lighting, lens, camera angle, color palette, mood, and style modifiers
 3. Video prompts must specify EXACT camera movement (slow zoom-in, pan left, dolly forward, etc.) and subject motion/animation
@@ -234,7 +296,7 @@ Respond with valid JSON only. No markdown. Structure:
     {
       "sub_scene_number": 1,
       "duration_seconds": ${subDuration},
-      "narration": "First portion of the narration (1-2 sentences)",
+      "narration": "[emotion] Word-counted narration matching safe_range for ${subDuration}s clip",
       "text_overlay": "Short 3-6 word caption",
       "image_prompt": "Hyper-detailed cinematic image prompt...",
       "image_subject": "Main focus of the shot",
@@ -250,10 +312,10 @@ Respond with valid JSON only. No markdown. Structure:
       "image_quality": "Rendering params (e.g. --q 2 --style raw)",
       "image_character_consistency": "Character ref weights (e.g. --cw 100)",
       "image_negative_prompt": "Unwanted elements (e.g. --no text, watermarks)",
-      "video_prompt": "Camera: [exact movement]. Subject: [exact action]. Include explicit instructions for any integrated AI audio/voice (e.g., Grok, Veo 3.1, Seedance) to be highly expressive, emotional, and human-like to ensure YouTube monetization safety.",
+      "video_prompt": "Camera: [exact movement]. Subject: [exact action]. Voice: highly expressive, emotional, human-like for YouTube monetization safety.",
       "vfx": "Specific VFX for this moment",
-      "sound": "Specific Foley/SFX (e.g., heavy bass impact, digital glitch, cinematic whoosh)",
-      "music": "Music track style and pacing (e.g., suspenseful dark synth, fast-paced phonk)",
+      "sound": "Specific Foley SFX, e.g. 'Crisp footstep on wet concrete with distant siren echo'",
+      "music": "Genre, BPM, instruments, energy, e.g. 'Dark ambient drone, 60 BPM, deep cello + reverb pad, haunting'",
       "camera_motion": "Exact camera direction",
       "color_grading": "Color palette and grade",
       "emotional_arc": "Emotion at this moment",

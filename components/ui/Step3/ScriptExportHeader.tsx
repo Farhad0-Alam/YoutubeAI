@@ -48,7 +48,7 @@ export function ScriptExportHeader({ scriptData, project, onAddScene }: ScriptEx
     
     let styleStr = 'Cinematic realism, 4K, 60fps, teal-orange grade, high quality';
     const aspectRatio = project?.aspect_ratio || '16:9';
-    const aiModel = project?.ai_model || 'seedance2.0';
+    const aiModel = project?.ai_model || 'veo3.1';
 
     if (aiModel === 'seedance2.0') {
       styleStr += ` --ar ${aspectRatio} --v 2.0`;

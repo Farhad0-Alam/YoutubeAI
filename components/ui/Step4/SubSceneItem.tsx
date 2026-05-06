@@ -1,5 +1,4 @@
 import React from 'react';
-import { SubSceneImageCard } from './SubSceneImageCard';
 import { SubSceneVideoCard } from './SubSceneVideoCard';
 
 interface SubSceneItemProps {
@@ -8,12 +7,10 @@ interface SubSceneItemProps {
   sub: any;
   scene: any;
   isProMode: boolean;
-  isGeneratingImage: boolean;
-  isGeneratingPrompts: boolean;
+  isGeneratingPrompts?: boolean;
   totalScenes?: number;
   onUpdate: (field: string, value: string) => void;
-  onGenerateImage: () => void;
-  onGeneratePrompts: () => void;
+  onGeneratePrompts?: () => void;
   onCopy: (text: string, id: string) => void;
   copiedId: string | null;
   voiceEnabled: boolean;
@@ -22,7 +19,6 @@ interface SubSceneItemProps {
   onToggleText: () => void;
   onApplyToAll: (field: string, value: string, label: string) => void;
   buildVideoPrompt: () => string;
-  buildImagePrompt: () => string;
 }
 
 export function SubSceneItem({
@@ -31,12 +27,8 @@ export function SubSceneItem({
   sub,
   scene,
   isProMode,
-  isGeneratingImage,
-  isGeneratingPrompts,
   totalScenes,
   onUpdate,
-  onGenerateImage,
-  onGeneratePrompts,
   onCopy,
   copiedId,
   voiceEnabled,
@@ -44,8 +36,7 @@ export function SubSceneItem({
   textEnabled,
   onToggleText,
   onApplyToAll,
-  buildVideoPrompt,
-  buildImagePrompt
+  buildVideoPrompt
 }: SubSceneItemProps) {
   const hasAiPrompts = !!sub?.image_prompt;
 
@@ -58,25 +49,7 @@ export function SubSceneItem({
         </div>
       </div>
 
-      <div className="p-0 grid grid-cols-1 xl:grid-cols-2 divide-y xl:divide-y-0 xl:divide-x divide-gray-200">
-        <SubSceneImageCard 
-          sceneIdx={sceneIdx}
-          subIdx={subIdx}
-          sub={sub}
-          scene={scene}
-          isProMode={isProMode}
-          isGeneratingImage={isGeneratingImage}
-          isGeneratingPrompts={isGeneratingPrompts}
-          hasAiPrompts={hasAiPrompts}
-          onUpdate={onUpdate}
-          onGenerateImage={onGenerateImage}
-          onGeneratePrompts={onGeneratePrompts}
-          onCopy={onCopy}
-          copiedId={copiedId}
-          onApplyToAll={onApplyToAll}
-          buildImagePrompt={buildImagePrompt}
-        />
-
+      <div className="p-0 grid grid-cols-1 divide-y divide-gray-200">
         <SubSceneVideoCard 
           sceneIdx={sceneIdx}
           subIdx={subIdx}

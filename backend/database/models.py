@@ -18,7 +18,7 @@ class Project(Base):
     topic           = Column(Text, nullable=False)
     script_style    = Column(String(100))
     visual_style    = Column(String(100))
-    duration_minutes= Column(Integer, default=5)
+    duration_minutes= Column(Float, default=5.0)
     scene_length    = Column(Integer, default=15)
     ai_model        = Column(String(50))
     llm_model       = Column(String(50), default="groq")

@@ -9,15 +9,31 @@ router = APIRouter()
 class GenerateRequest(BaseModel):
     niche_id: str
     topic: str
-    duration_minutes: int
+    duration_minutes: float
     script_style: str
     scene_length: Optional[int] = 15
     extra_instructions: str = ""
     voice_gender: str = "Male"
-    llm_model: Optional[str] = "groq"   # groq | openai | gemini | claude | grok
+    llm_model: Optional[str] = "groq"
+    ai_model: Optional[str] = "veo3.1"
+    aspect_ratio: Optional[str] = "16:9"
 
 @router.post("/generate")
 async def api_generate_script(request: GenerateRequest):
+    # ── DEBUG: Print exactly what the frontend sent ──────────────────────────
+    print(f"\n{'='*60}")
+    print(f"🔍 BACKEND RECEIVED REQUEST:")
+    print(f"   duration_minutes = {request.duration_minutes}")
+    print(f"   scene_length     = {request.scene_length}")
+    total_sec = round(request.duration_minutes * 60)
+    expected_scenes = total_sec // (request.scene_length or 15)
+    print(f"   total_seconds    = {total_sec}")
+    print(f"   expected_scenes  = {expected_scenes}")
+    print(f"   ai_model         = {request.ai_model}")
+    print(f"   llm_model        = {request.llm_model}")
+    print(f"{'='*60}\n")
+    # ─────────────────────────────────────────────────────────────────────────
+
     niche_config = next((n for n in NICHE_CONFIGS if n["niche_id"] == request.niche_id), None)
     if not niche_config:
         raise HTTPException(status_code=400, detail=f"Invalid niche_id: {request.niche_id}")
@@ -30,7 +46,9 @@ async def api_generate_script(request: GenerateRequest):
             scene_length=request.scene_length,
             style=request.script_style,
             extra_instructions=request.extra_instructions,
-            llm_model=request.llm_model or "groq"
+            llm_model=request.llm_model or "groq",
+            ai_model=request.ai_model or "veo3.1",
+            aspect_ratio=request.aspect_ratio or "16:9"
         )
 
         # ── Build full SEO description from parts ────────────────────────────

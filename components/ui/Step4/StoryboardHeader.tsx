@@ -10,6 +10,7 @@ interface StoryboardHeaderProps {
   setIsProMode: (mode: boolean) => void;
   chunkInterval: number;
   setChunkInterval: (interval: number) => void;
+  aiModel?: string;
 }
 
 export function StoryboardHeader({
@@ -19,8 +20,31 @@ export function StoryboardHeader({
   isProMode,
   setIsProMode,
   chunkInterval,
-  setChunkInterval
+  setChunkInterval,
+  aiModel = 'veo3.1'
 }: StoryboardHeaderProps) {
+
+  const getClipOptions = () => {
+    switch (aiModel) {
+      case 'veo3.1': return [{ val: 4, label: '4s' }, { val: 8, label: '8s' }];
+      case 'sora': return [{ val: 4, label: '4s' }, { val: 10, label: '10s' }];
+      case 'grok2': return [{ val: 6, label: '6s' }, { val: 10, label: '10s' }];
+      case 'runway_gen3':
+      case 'kling_v1.5': return [{ val: 5, label: '5s' }, { val: 10, label: '10s' }];
+      case 'seedance2.0':
+      default: return [{ val: 2, label: '2s' }, { val: 4, label: '4s' }, { val: 8, label: '8s' }];
+    }
+  };
+
+  const clipOptions = getClipOptions();
+
+  // Auto-correct invalid chunk interval if it's not in the new options
+  React.useEffect(() => {
+    if (!clipOptions.find(o => o.val === chunkInterval)) {
+      setChunkInterval(clipOptions[0].val);
+    }
+  }, [aiModel, chunkInterval, clipOptions, setChunkInterval]);
+
   return (
     <div className="p-4 sm:p-8 border-b border-gray-100 bg-gray-50/50">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 font-display flex items-center gap-2">
@@ -71,14 +95,9 @@ export function StoryboardHeader({
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Clip Length:</span>
-            <div className="flex bg-white rounded-lg border border-gray-200 shadow-sm p-1">
-              {[
-                { val: 1, label: '1s (Action)' },
-                { val: 2, label: '2s (Default)' },
-                { val: 3, label: '3s (Paced)' },
-                { val: 4, label: '4s (Dialogue)' }
-              ].map(({ val, label }) => (
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Clip Length ({aiModel}):</span>
+            <div className="flex flex-wrap bg-white rounded-lg border border-gray-200 shadow-sm p-1">
+              {clipOptions.map(({ val, label }) => (
                 <button
                   key={val}
                   onClick={() => setChunkInterval(val)}

@@ -7,16 +7,20 @@ import { api } from '../lib/api';
 import { parseScriptByScenes } from '../lib/storyboardLogic';
 
 export function useNicheTopicLogic() {
-  const [selectedNiche, setSelectedNiche] = useState(niches[0].niche_id);
-  const [selectedStyle, setSelectedStyle] = useState(niches[0].bestStyles?.[0] || 'cinematic');
-  const [duration, setDuration] = useState(0.5);
-  const [aspectRatio, setAspectRatio] = useState('9:16');
+  // Read existing project from store to hydrate local state
+  // This prevents the bug where hardcoded defaults overwrite saved project settings
+  const existingProject = useVideoStore.getState().project;
+
+  const [selectedNiche, setSelectedNiche] = useState(existingProject?.niche_id || niches[0].niche_id);
+  const [selectedStyle, setSelectedStyle] = useState(existingProject?.visual_style || niches[0].bestStyles?.[0] || 'cinematic');
+  const [duration, setDuration] = useState(existingProject?.duration_minutes ?? 0.5);
+  const [aspectRatio, setAspectRatio] = useState(existingProject?.aspect_ratio || '9:16');
   const [isTrendModalOpen, setIsTrendModalOpen] = useState(false);
-  const [sceneLength, setSceneLength] = useState(15);
-  const [llmModel, setLlmModel] = useState('gemini');
-  const [aiVisualModel, setAiVisualModel] = useState('seedance2.0');
-  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
-  const [ollamaModel, setOllamaModel] = useState('qwen2.5:14b');
+  const [sceneLength, setSceneLength] = useState(existingProject?.scene_length ?? 15);
+  const [llmModel, setLlmModel] = useState(existingProject?.settings?.llm_model || 'gemini');
+  const [aiVisualModel, setAiVisualModel] = useState(existingProject?.ai_model || 'veo3.1');
+  const [ollamaUrl, setOllamaUrl] = useState(existingProject?.settings?.ollama_url || 'http://localhost:11434');
+  const [ollamaModel, setOllamaModel] = useState(existingProject?.settings?.ollama_model || 'qwen2.5:14b');
   const [customScript, setCustomScript] = useState('');
 
   const { isGeneratingHooks, generateHooks } = useVideoGeneration();

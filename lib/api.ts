@@ -145,6 +145,8 @@ Structure:
     scene_length?: number;
     extra_instructions?: string;
     llm_model?: string;
+    ai_model?: string;
+    aspect_ratio?: string;
   }) {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
     try {
@@ -158,7 +160,9 @@ Structure:
           script_style: data.script_style,
           scene_length: data.scene_length || 15,
           extra_instructions: data.extra_instructions || "",
-          llm_model: data.llm_model || "groq"
+          llm_model: data.llm_model || "groq",
+          ai_model: data.ai_model || "veo3.1",
+          aspect_ratio: data.aspect_ratio || "16:9"
         })
       });
 
@@ -225,7 +229,7 @@ Structure:
     const interval = data.chunk_interval || 2;
     const numSubScenes = Math.max(1, Math.ceil(data.duration_seconds / interval));
     const subDuration = Math.round(data.duration_seconds / numSubScenes);
-    const aiTool = data.ai_model || 'seedance2.0';
+    const aiTool = data.ai_model || 'veo3.1';
     const style = data.visual_style || 'cinematic';
     const ratio = data.aspect_ratio || '16:9';
 

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Scene } from '../../types';
+import { Scene } from '../../../types';
 import { Copy, Check, Film } from 'lucide-react';
-import { useVideoStore } from '../../store/videoStore';
-import { NarrationEditor } from './NarrationEditor';
+import { useVideoStore } from '../../../store/videoStore';
+import { NarrationEditor } from '../NarrationEditor';
 
 interface VideoPromptEditorProps {
   scene: Scene;
@@ -20,28 +20,28 @@ export function VideoPromptEditor({ scene, onUpdate, sceneIndex = 0, totalScenes
   const buildFullVideoPrompt = () => {
     let styleStr = 'Cinematic realism, 4K, 60fps, teal-orange grade, high quality';
     const aspectRatio = project?.aspect_ratio || '16:9';
-    const aiModel = project?.ai_model || 'seedance2.0';
+    const aiModel = project?.ai_model || 'veo3.1';
 
     if (aiModel === 'seedance2.0') {
-       styleStr += ` --ar ${aspectRatio} --v 2.0`;
+      styleStr += ` --ar ${aspectRatio} --v 2.0`;
     } else if (aiModel === 'veo3.1') {
-       styleStr = `Highly realistic, cinematic lighting, Veo 3.1 optimization, aspect ratio ${aspectRatio}`;
+      styleStr = `Highly realistic, cinematic lighting, Veo 3.1 optimization, aspect ratio ${aspectRatio}`;
     } else if (aiModel === 'kling_v1.5') {
-       styleStr = `Masterpiece, best quality, cinematography, Kling v1.5, aspect ratio ${aspectRatio}`;
+      styleStr = `Masterpiece, best quality, cinematography, Kling v1.5, aspect ratio ${aspectRatio}`;
     } else if (aiModel === 'midjourney_v6') {
-       styleStr = `--ar ${aspectRatio} --v 6.0 --style raw`;
+      styleStr = `--ar ${aspectRatio} --v 6.0 --style raw`;
     } else if (aiModel === 'runway_gen3') {
-       styleStr = `Gen-3 Alpha, hyperrealistic, dynamic motion, aspect ratio ${aspectRatio}`;
+      styleStr = `Gen-3 Alpha, hyperrealistic, dynamic motion, aspect ratio ${aspectRatio}`;
     } else if (aiModel === 'sora') {
-       styleStr = `OpenAI Sora, photorealistic, highly detailed, smooth motion, 4k resolution`;
+      styleStr = `OpenAI Sora, photorealistic, highly detailed, smooth motion, 4k resolution`;
     } else if (aiModel === 'grok2') {
-       styleStr = `Grok 2.0 rendering, highly cinematic, detailed textures, vivid lighting, ratio ${aspectRatio}`;
+      styleStr = `Grok 2.0 rendering, highly cinematic, detailed textures, vivid lighting, ratio ${aspectRatio}`;
     }
 
     const basePrompt = scene.video_prompt ? scene.video_prompt.trim() : scene.image_prompt ? scene.image_prompt.trim() : scene.visual_description?.trim();
-    
+
     let prompt = '';
-    
+
     if (aiModel === 'midjourney_v6') {
       prompt = `/imagine prompt: ${basePrompt}, highly detailed cinematic photography, 8k resolution ${styleStr}`;
     } else {
@@ -51,7 +51,7 @@ export function VideoPromptEditor({ scene, onUpdate, sceneIndex = 0, totalScenes
     if (includeVoice && scene.narration) prompt += `\n\nVOICEOVER: ${scene.narration.trim()}`;
     if (includeTextOverlay && scene.text_overlay) {
       prompt += `\n\nTEXT OVERLAY: "${scene.text_overlay.trim()}"`;
-      
+
       let position = scene.text_position || 'Default (Center)';
       if (position === 'AI Auto-Select') {
         const positions = ['Top Center', 'Bottom Center', 'Top Left', 'Top Right', 'Bottom Left', 'Bottom Right', 'Center Left', 'Center Right', 'Default (Center)'];
@@ -63,7 +63,7 @@ export function VideoPromptEditor({ scene, onUpdate, sceneIndex = 0, totalScenes
       if (animation === 'AI Auto-Select') {
         const animations = [
           'Typewriter', 'Slide Up Fade', 'Smooth Pop-up',
-          'Kinetic Typography Reveal', 'Data Glitch RGB Split', 'Cinematic Title Swipe', 
+          'Kinetic Typography Reveal', 'Data Glitch RGB Split', 'Cinematic Title Swipe',
           'Slow Tracking (Letter Spacing Increase)', '3D Extrusion Rotation', 'Liquid Distortion Reveal',
           'Masked Wipe (Left to Right)', 'Masked Wipe (Bottom to Top)', 'Blur to Sharp Reveal',
           'Overshoot Scale Bounce', 'Random Character Shuffle (Hacker Effect)', 'Echo / Motion Blur Trail',
@@ -115,21 +115,14 @@ export function VideoPromptEditor({ scene, onUpdate, sceneIndex = 0, totalScenes
     setTimeout(() => setCopied(false), 2000);
   };
 
-    return (
+  return (
     <div className="mt-6">
-      {/* Voice / Narration — Always visible for editing */}
-      <NarrationEditor 
-        value={scene.narration || ''}
-        onChange={(val) => onUpdate({ narration: val })}
-        clipDuration={scene.duration_seconds}
-        sceneIndex={sceneIndex}
-        totalScenes={totalScenes}
-      />
+
 
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-6">
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Video Search Keyword</label>
-          <input 
+          <input
             type="text"
             value={scene.search_keyword}
             onChange={(e) => onUpdate({ search_keyword: e.target.value })}
@@ -137,7 +130,7 @@ export function VideoPromptEditor({ scene, onUpdate, sceneIndex = 0, totalScenes
           />
         </div>
       </div>
-      
+
       {(scene.visual_description || scene.video_prompt || scene.vfx || scene.sound || scene.music) && (
         <div className="mt-6 pt-5 border-t border-gray-100 space-y-6">
           <div>
@@ -201,15 +194,32 @@ export function VideoPromptEditor({ scene, onUpdate, sceneIndex = 0, totalScenes
         </div>
       )}
 
+      {/* Voice / Narration — Moved below Compiled Video Prompt */}
+      <NarrationEditor
+        value={scene.narration || ''}
+        onChange={(val) => onUpdate({ narration: val })}
+        clipDuration={scene.duration_seconds}
+        sceneIndex={sceneIndex}
+        totalScenes={totalScenes}
+        sceneContext={{
+          visual_description: scene.visual_description || scene.video_prompt,
+          image_prompt: scene.image_prompt,
+          search_keyword: scene.search_keyword,
+          text_overlay: scene.text_overlay,
+          topic: project?.topic,
+          niche: project?.niche_id,
+        }}
+      />
+
       <div className="mt-6 pt-5 border-t border-gray-100">
         <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
           <Film className="w-4 h-4 text-indigo-500" /> Text Overlay & Effects
         </h4>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Text Overlay / Captions</label>
-            <textarea 
+            <textarea
               value={scene.text_overlay || ''}
               onChange={(e) => onUpdate({ text_overlay: e.target.value })}
               placeholder="Enter text to overlay on the video..."
@@ -316,7 +326,7 @@ export function VideoPromptEditor({ scene, onUpdate, sceneIndex = 0, totalScenes
           </div>
         </div>
       </div>
-      
+
       <div className="mt-6 pt-5 border-t border-gray-100">
         <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-4">Advanced Cinematic Details</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

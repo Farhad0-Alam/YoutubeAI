@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, Check, Edit2, SlidersHorizontal, Image as ImageIcon } from 'lucide-react';
-import { Scene } from '../../types';
+import { Scene } from '../../../types';
 
 interface ImagePromptEditorProps {
   scene: Scene;

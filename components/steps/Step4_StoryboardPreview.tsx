@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { useVideoStore } from '../../store/videoStore';
 import { api } from '../../lib/api';
 import { toast } from 'sonner';
-import { StoryboardHeader } from '../ui/StoryboardHeader';
-import { SceneStoryboardCard } from '../ui/SceneStoryboardCard';
+import { StoryboardHeader } from '../ui/Step4/StoryboardHeader';
+import { SceneStoryboardCard } from '../ui/Step4/SceneStoryboardCard';
 
 export function Step4_StoryboardPreview() {
   const { scriptData, project, setStep, updateScene } = useVideoStore();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generatingScene, setGeneratingScene] = useState<number | null>(null);
   const [generatingAll, setGeneratingAll] = useState(false);
-  const [generatingImages, setGeneratingImages] = useState<Record<string, boolean>>({});
   const [voiceToggles, setVoiceToggles] = useState<Record<string, boolean>>({});
   const [textToggles, setTextToggles] = useState<Record<string, boolean>>({});
   const [chunkInterval, setChunkInterval] = useState<number>(2);
@@ -53,25 +52,7 @@ export function Step4_StoryboardPreview() {
     }
   };
 
-  const handleGeneratePreviewImage = async (sceneIdx: number, subIdx: number) => {
-    const key = `${sceneIdx}-${subIdx}`;
-    const prompt = buildFullSubSceneImagePrompt(sceneIdx, subIdx);
-    if (!prompt) {
-      toast.error('No image prompt to generate from.');
-      return;
-    }
 
-    setGeneratingImages(prev => ({ ...prev, [key]: true }));
-    try {
-      const url = await api.generateImage({ prompt });
-      handleSubSceneUpdate(sceneIdx, subIdx, 'preview_url', url);
-      toast.success('Preview image generated!');
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to generate preview image');
-    } finally {
-      setGeneratingImages(prev => ({ ...prev, [key]: false }));
-    }
-  };
 
   const handleGenerateAll = async () => {
     setGeneratingAll(true);
@@ -103,7 +84,7 @@ export function Step4_StoryboardPreview() {
 
     let styleStr = 'Cinematic realism, 4K, 60fps, teal-orange grade, high quality';
     const aspectRatio = project?.aspect_ratio || '16:9';
-    const aiModel = project?.ai_model || 'seedance2.0';
+    const aiModel = project?.ai_model || 'veo3.1';
 
     if (aiModel === 'seedance2.0') {
       styleStr += ` --ar ${aspectRatio} --v 2.0`;
@@ -167,40 +148,7 @@ export function Step4_StoryboardPreview() {
     return prompt;
   };
 
-  const buildFullSubSceneImagePrompt = (sceneIdx: number, subIdx: number) => {
-    const scene = scriptData.scenes[sceneIdx] as any;
-    const sub = (scene.sub_scenes?.[subIdx] as any) || {};
 
-    const subject = sub.image_subject || scene.image_subject || '';
-    const setting = sub.image_setting || scene.image_setting || '';
-    const mood = sub.image_mood || scene.image_mood || '';
-    const lighting = sub.image_lighting || scene.image_lighting || '';
-    const colorGrade = sub.image_color_grade || scene.image_color_grade || '';
-    const cameraAngle = sub.image_camera_angle || scene.image_camera_angle || '';
-    const shotType = sub.image_shot_type || scene.image_shot_type || '';
-    const styleModifier = sub.image_style_modifier || scene.image_style_modifier || '';
-
-    const newPrompt = [
-      subject,
-      setting,
-      mood,
-      lighting,
-      colorGrade,
-      cameraAngle,
-      shotType,
-      styleModifier
-    ].filter(Boolean).join(', ');
-
-    const aspectRatio = sub.image_aspect_ratio || scene.image_aspect_ratio || '';
-    const seed = sub.image_seed || scene.image_seed || '';
-    const quality = sub.image_quality || scene.image_quality || '';
-    const characterRef = sub.image_character_consistency || scene.image_character_consistency || '';
-    const negativePrompt = sub.image_negative_prompt || scene.image_negative_prompt || '';
-
-    const suffixes = [aspectRatio, seed, quality, characterRef, negativePrompt].filter(Boolean).join(' ');
-
-    return `${newPrompt}. ${suffixes}`.trim();
-  };
 
   const splitText = (text: string, n: number): string[] => {
     if (!text) return Array(n).fill('');
@@ -240,6 +188,7 @@ export function Step4_StoryboardPreview() {
         setIsProMode={setIsProMode}
         chunkInterval={chunkInterval}
         setChunkInterval={setChunkInterval}
+        aiModel={project?.ai_model || 'veo3.1'}
       />
 
       <div className="p-4 sm:p-8 pb-32 space-y-10">
@@ -253,9 +202,7 @@ export function Step4_StoryboardPreview() {
             totalScenes={scriptData.scenes.length}
             generatingScene={generatingScene}
             generatingAll={generatingAll}
-            generatingImages={generatingImages}
             onGenerateSubScenes={handleGenerateSubScenes}
-            onGeneratePreviewImage={handleGeneratePreviewImage}
             onSubSceneUpdate={handleSubSceneUpdate}
             onCopy={handleCopy}
             copiedId={copiedId}
@@ -265,7 +212,6 @@ export function Step4_StoryboardPreview() {
             onToggleText={(sIdx, subIdx) => setTextToggles(prev => ({ ...prev, [`${sIdx}-${subIdx}`]: !(prev[`${sIdx}-${subIdx}`] ?? true) }))}
             onApplyToAll={handleApplyToAll}
             buildVideoPrompt={buildFullSubSceneVideoPrompt}
-            buildImagePrompt={buildFullSubSceneImagePrompt}
             splitText={splitText}
           />
         ))}

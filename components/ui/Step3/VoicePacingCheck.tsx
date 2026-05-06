@@ -1,5 +1,5 @@
 import React from 'react';
-import { validateNarration, calculateScriptBudget, type SceneType, detectSceneType } from '../../lib/voiceLogic';
+import { validateNarration, calculateScriptBudget, type SceneType, detectSceneType } from '../../../lib/voiceLogic';
 
 interface Scene {
   narration?: string;

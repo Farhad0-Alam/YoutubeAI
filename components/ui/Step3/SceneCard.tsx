@@ -1,7 +1,7 @@
-import { Scene } from '../../types';
+import { Scene } from '../../../types';
 import { Copy, Check, Film } from 'lucide-react';
 import { useState } from 'react';
-import { useVideoStore } from '../../store/videoStore';
+import { useVideoStore } from '../../../store/videoStore';
 import { ImagePromptEditor } from './ImagePromptEditor';
 import { VideoPromptEditor } from './VideoPromptEditor';
 

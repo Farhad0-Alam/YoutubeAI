@@ -14,7 +14,7 @@ class ProjectCreate(BaseModel):
     topic: str
     script_style: Optional[str] = "documentary"
     visual_style: Optional[str] = "cinematic"
-    duration_minutes: Optional[int] = 5
+    duration_minutes: Optional[float] = 5.0
     scene_length: Optional[int] = 15
     ai_model: Optional[str] = None
     llm_model: Optional[str] = "groq"

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Volume2, Copy, Check } from 'lucide-react';
+import { Volume2, Copy, Check, Sparkles, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { validateNarration, type NarrationValidation } from '../../lib/voiceLogic';
+import { validateNarration, calculateWordBudget, detectSceneType, getPresetForSceneType, type NarrationValidation } from '../../lib/voiceLogic';
 
 interface NarrationEditorProps {
   value: string;
@@ -20,6 +20,15 @@ interface NarrationEditorProps {
   sceneIndex?: number;
   /** Total scenes — used for scene type detection */
   totalScenes?: number;
+  /** Scene context for AI narration generation */
+  sceneContext?: {
+    visual_description?: string;
+    image_prompt?: string;
+    search_keyword?: string;
+    text_overlay?: string;
+    topic?: string;
+    niche?: string;
+  };
 }
 
 export function NarrationEditor({
@@ -35,9 +44,11 @@ export function NarrationEditor({
   labelClass = "text-orange-600",
   clipDuration,
   sceneIndex = 0,
-  totalScenes = 1
+  totalScenes = 1,
+  sceneContext
 }: NarrationEditorProps) {
   const [copied, setCopied] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(value);
@@ -45,12 +56,82 @@ export function NarrationEditor({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const emotions = ['neutral', 'happy', 'sad', 'angry', 'dramatic', 'whisper', 'shouting', 'terrified', 'excited', 'urgent', 'calm', 'confident', 'curious', 'warm'];
+  // ── AI Narration Generation ──────────────────────────────────────────
+  const handleAINarration = async () => {
+    if (!clipDuration || clipDuration <= 0) return;
+    setIsGenerating(true);
 
-  const insertEmotion = (emotion: string) => {
-    if (!emotion || emotion === 'neutral') return;
-    const tag = `[${emotion}] `;
-    onChange(tag + (value || ''));
+    try {
+      const budget = calculateWordBudget(clipDuration, sceneIndex, totalScenes);
+      const sceneType = detectSceneType(sceneIndex, totalScenes);
+      const preset = getPresetForSceneType(sceneType);
+
+      // Build a rich prompt for the AI
+      const visualContext = sceneContext?.visual_description || sceneContext?.image_prompt || '';
+      const keyword = sceneContext?.search_keyword || '';
+      const topic = sceneContext?.topic || '';
+      const overlay = sceneContext?.text_overlay || '';
+
+      const prompt = `You are a professional YouTube voiceover script writer. Generate a narration line for a video scene.
+
+SCENE CONTEXT:
+- Topic: ${topic || 'General'}
+- Visual: ${visualContext || 'Not specified'}
+- Keywords: ${keyword || 'Not specified'}
+- Text Overlay: ${overlay || 'None'}
+- Scene Position: ${sceneType === 'hook' ? 'OPENING HOOK (Scene 1)' : sceneType === 'cta' ? 'CLOSING CTA (Final Scene)' : `BODY (Scene ${sceneIndex + 1} of ${totalScenes})`}
+- Scene Duration: ${clipDuration} seconds
+
+WORD BUDGET (MANDATORY):
+- Safe word range: ${budget.safeMin}–${budget.safeMax} words
+- Voice preset: ${preset.label} (${preset.wpm} WPM, ${Math.round(preset.breathOverhead * 100)}% breath overhead)
+- Required emotion: ${preset.emotion}
+
+RULES:
+1. Start with emotion tag: [${preset.emotion}]
+2. Word count MUST be between ${budget.safeMin} and ${budget.safeMax} words (NOT counting the emotion tag)
+3. ${sceneType === 'hook' ? 'Make it attention-grabbing, high-energy, create instant curiosity' : sceneType === 'cta' ? 'Make it warm, inviting, with a clear call to action (subscribe, like, comment)' : 'Make it informative, engaging, building on the topic with vivid language'}
+4. Sound natural and human — avoid robotic or generic phrasing
+5. Match the visual context provided
+
+Return ONLY the narration text. No explanation. No quotes around it. Just the narration starting with the emotion tag.`;
+
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+      if (!apiKey) {
+        throw new Error('Gemini API key not found');
+      }
+
+      const { GoogleGenerativeAI } = await import('@google/generative-ai');
+      const ai = new GoogleGenerativeAI(apiKey);
+      const model = ai.getGenerativeModel({
+        model: 'gemini-2.0-flash',
+        generationConfig: { temperature: 0.8 }
+      });
+
+      const result = await model.generateContent(prompt);
+      let narration = result.response.text()?.trim() || '';
+
+      // Clean up: remove surrounding quotes if present
+      if ((narration.startsWith('"') && narration.endsWith('"')) || (narration.startsWith("'") && narration.endsWith("'"))) {
+        narration = narration.slice(1, -1);
+      }
+
+      // Ensure emotion tag is present
+      if (!narration.startsWith('[')) {
+        narration = `[${preset.emotion}] ${narration}`;
+      }
+
+      onChange(narration);
+    } catch (err: any) {
+      console.error('AI Narration Error:', err);
+      // Fallback: generate a placeholder with correct word count
+      const budget = calculateWordBudget(clipDuration, sceneIndex, totalScenes);
+      const sceneType = detectSceneType(sceneIndex, totalScenes);
+      const preset = getPresetForSceneType(sceneType);
+      onChange(`[${preset.emotion}] (AI generation failed — please write ${budget.safeMin}–${budget.safeMax} words here)`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Word budget validation (only if clipDuration is provided)
@@ -59,8 +140,13 @@ export function NarrationEditor({
     validation = validateNarration(value || '', clipDuration, sceneIndex, totalScenes);
   }
 
-  // Simple word count fallback
-  const wordCount = (value || '').replace(/\[.*?\]/g, '').trim().split(/\s+/).filter(w => w.length > 0).length;
+  // Simple word count — strip emotion tags before counting
+  const cleanText = (value || '').replace(/\[.*?\]/g, '').trim();
+  const wordCount = cleanText.length > 0 ? cleanText.split(/\s+/).filter(w => w.length > 0).length : 0;
+
+  // Detect current emotion tag
+  const emotionMatch = (value || '').match(/^\[([^\]]+)\]/);
+  const currentEmotion = emotionMatch ? emotionMatch[1] : null;
 
   return (
     <div className={`relative group ${className}`}>
@@ -69,17 +155,31 @@ export function NarrationEditor({
           <Volume2 className={`w-4 h-4 ${iconClass}`} /> {label}
         </label>
         <div className="flex items-center gap-2">
-          <select 
-            onChange={(e) => {
-              insertEmotion(e.target.value);
-              e.target.value = '';
-            }}
-            className="text-[10px] uppercase font-bold tracking-wider bg-white border border-orange-200 text-orange-600 rounded px-2 py-1 outline-none hover:bg-orange-50 cursor-pointer"
-            title="Insert voice emotion tag"
+          {/* AI Narration Button */}
+          <button
+            onClick={handleAINarration}
+            disabled={isGenerating || !clipDuration}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-wider transition-all duration-200 ${isGenerating
+                ? 'bg-purple-100 text-purple-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-sm hover:shadow-md active:scale-95'
+              }`}
+            title="Generate narration with AI — auto-applies emotion tag and word budget"
           >
-            <option value="">+ Emotion</option>
-            {emotions.map(e => <option key={e} value={e}>{e}</option>)}
-          </select>
+            {isGenerating ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5" />
+            )}
+            {isGenerating ? 'Generating...' : 'AI Narration'}
+          </button>
+
+          {/* Current emotion badge (if present) */}
+          {currentEmotion && (
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-600 px-2 py-1 rounded-full border border-orange-200">
+              {currentEmotion}
+            </span>
+          )}
+
           <button
             onClick={handleCopy}
             className="opacity-0 group-hover:opacity-100 p-1.5 bg-white border border-gray-200 rounded-md shadow-sm transition-opacity hover:bg-gray-50"
@@ -101,12 +201,11 @@ export function NarrationEditor({
         <div className={`flex items-center gap-2 mt-1.5 px-2 py-1.5 rounded-lg ${validation.bgColor} border ${validation.color}`} style={{ borderColor: 'currentColor', borderWidth: '1px' }}>
           <div className="flex-1 h-2 bg-white/60 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                validation.status === 'perfect' ? 'bg-emerald-500' :
-                validation.status === 'tight' ? 'bg-blue-500' :
-                validation.status === 'over' ? 'bg-red-500' :
-                validation.status === 'under' ? 'bg-amber-400' : 'bg-gray-300'
-              }`}
+              className={`h-full rounded-full transition-all duration-300 ${validation.status === 'perfect' ? 'bg-emerald-500' :
+                  validation.status === 'tight' ? 'bg-blue-500' :
+                    validation.status === 'over' ? 'bg-red-500' :
+                      validation.status === 'under' ? 'bg-amber-400' : 'bg-gray-300'
+                }`}
               style={{ width: `${Math.min((validation.wordCount / validation.budget.safeMax) * 100, 100)}%` }}
             />
           </div>

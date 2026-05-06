@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useVideoStore } from '../../store/videoStore';
-import { SceneCard } from '../ui/SceneCard';
+import { SceneCard } from '../ui/Step3/SceneCard';
 import { toast } from 'sonner';
-import { YouTubeSEOMetadata } from '../ui/YouTubeSEOMetadata';
+import { YouTubeSEOMetadata } from '../ui/Step3/YouTubeSEOMetadata';
 import { api } from '../../lib/api';
-import { ScriptExportHeader } from '../ui/ScriptExportHeader';
-import { VoicePacingCheck } from '../ui/VoicePacingCheck';
+import { ScriptExportHeader } from '../ui/Step3/ScriptExportHeader';
+import { VoicePacingCheck } from '../ui/Step3/VoicePacingCheck';
 
 export function Step3_ScriptEditor() {
   const { scriptData, updateScene, setStep, project, setScriptData } = useVideoStore();

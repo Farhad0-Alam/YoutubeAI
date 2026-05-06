@@ -1,6 +1,6 @@
 import React from 'react';
 import { Film, Camera, Check, Copy, Type, Music2 } from 'lucide-react';
-import { NarrationEditor } from './NarrationEditor';
+import { NarrationEditor } from '../NarrationEditor';
 
 interface SubSceneVideoCardProps {
   sceneIdx: number;

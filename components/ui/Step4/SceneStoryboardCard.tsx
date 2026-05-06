@@ -10,9 +10,7 @@ interface SceneStoryboardCardProps {
   totalScenes?: number;
   generatingScene: number | null;
   generatingAll: boolean;
-  generatingImages: Record<string, boolean>;
   onGenerateSubScenes: (index: number) => void;
-  onGeneratePreviewImage: (sceneIdx: number, subIdx: number) => void;
   onSubSceneUpdate: (sceneIdx: number, subIdx: number, field: string, value: string) => void;
   onCopy: (text: string, id: string) => void;
   copiedId: string | null;
@@ -22,7 +20,6 @@ interface SceneStoryboardCardProps {
   onToggleText: (sceneIdx: number, subIdx: number) => void;
   onApplyToAll: (field: string, value: string, label: string) => void;
   buildVideoPrompt: (sceneIdx: number, subIdx: number) => string;
-  buildImagePrompt: (sceneIdx: number, subIdx: number) => string;
   splitText: (text: string, n: number) => string[];
 }
 
@@ -34,9 +31,7 @@ export function SceneStoryboardCard({
   totalScenes,
   generatingScene,
   generatingAll,
-  generatingImages,
   onGenerateSubScenes,
-  onGeneratePreviewImage,
   onSubSceneUpdate,
   onCopy,
   copiedId,
@@ -46,7 +41,6 @@ export function SceneStoryboardCard({
   onToggleText,
   onApplyToAll,
   buildVideoPrompt,
-  buildImagePrompt,
   splitText
 }: SceneStoryboardCardProps) {
   const totalSeconds = scene.duration_seconds || 15;
@@ -114,10 +108,8 @@ export function SceneStoryboardCard({
                 sub={sub}
                 scene={scene}
                 isProMode={isProMode}
-                isGeneratingImage={generatingImages[`${index}-${subIdx}`]}
                 isGeneratingPrompts={generatingScene === index}
                 onUpdate={(field, value) => onSubSceneUpdate(index, subIdx, field, value)}
-                onGenerateImage={() => onGeneratePreviewImage(index, subIdx)}
                 onGeneratePrompts={() => onGenerateSubScenes(index)}
                 onCopy={onCopy}
                 copiedId={copiedId}
@@ -128,7 +120,6 @@ export function SceneStoryboardCard({
                 onApplyToAll={onApplyToAll}
                 totalScenes={totalScenes}
                 buildVideoPrompt={() => buildVideoPrompt(index, subIdx)}
-                buildImagePrompt={() => buildImagePrompt(index, subIdx)}
               />
             );
           })}

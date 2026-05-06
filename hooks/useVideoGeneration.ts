@@ -47,7 +47,11 @@ export function useVideoGeneration() {
   const generateScript = async (params: any) => {
     setIsGenerating(true);
     try {
-      const data = await api.generateScript(params);
+      const data = await api.generateScript({
+        ...params,
+        ai_model: params.ai_model,
+        aspect_ratio: params.aspect_ratio,
+      });
       setScriptData(data);
       
       const projectData = {

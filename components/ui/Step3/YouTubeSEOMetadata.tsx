@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useVideoStore } from '../../store/videoStore';
+import { useVideoStore } from '../../../store/videoStore';
 import { toast } from 'sonner';
 import { Loader2, RefreshCw } from 'lucide-react';
-import { api } from '../../lib/api';
+import { api } from '../../../lib/api';
 
 export function YouTubeSEOMetadata() {
   const { scriptData, setScriptData, project } = useVideoStore();

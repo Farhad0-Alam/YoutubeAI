@@ -101,7 +101,7 @@ export function useHookTitleLogic() {
     CRITICAL: YOU MUST USE THIS EXACT TITLE: "${selectedTitle}"
     CRITICAL: YOU MUST USE THIS EXACT HOOK FOR THE FIRST SCENE: "${selectedHook}"`;
 
-    generateScript({
+    const scriptParams = {
       niche_id: project.niche_id,
       topic: enhancedTopic,
       duration_minutes: project.duration_minutes,
@@ -109,10 +109,22 @@ export function useHookTitleLogic() {
       script_style: project.script_style,
       voice_gender: project.voice || 'Male',
       aspect_ratio: project.aspect_ratio || '16:9',
+      ai_model: project.ai_model || 'veo3.1',
       llm_model: project.settings?.llm_model,
       ollama_url: project.settings?.ollama_url,
       ollama_model: project.settings?.ollama_model
+    };
+
+    console.log('🔍 [Step2 → Backend] Writing script with params:', {
+      duration_minutes: scriptParams.duration_minutes,
+      scene_length: scriptParams.scene_length,
+      total_seconds: Math.round((scriptParams.duration_minutes || 0) * 60),
+      expected_scenes: Math.floor(Math.round((scriptParams.duration_minutes || 0) * 60) / (scriptParams.scene_length || 15)),
+      ai_model: scriptParams.ai_model,
+      llm_model: scriptParams.llm_model,
     });
+
+    generateScript(scriptParams);
   };
 
   const handleGenerateMore = async () => {

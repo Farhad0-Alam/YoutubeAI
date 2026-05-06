@@ -187,18 +187,18 @@ export function validateNarration(
   } else if (wordCount > budget.safeMax) {
     const overBy = wordCount - budget.safeMax;
     status = 'over';
-    message = `${overBy} words OVER — will sound rushed`;
+    message = `${overBy} word${overBy > 1 ? 's' : ''} OVER — will sound rushed`;
     color = 'text-red-600';
     bgColor = 'bg-red-50';
   } else if (wordCount < budget.safeMin) {
     const underBy = budget.safeMin - wordCount;
     status = 'under';
-    message = `${underBy} words SHORT — add more content`;
+    message = `${underBy} word${underBy > 1 ? 's' : ''} SHORT — add more content`;
     color = 'text-amber-600';
     bgColor = 'bg-amber-50';
-  } else if (wordCount >= budget.safeMax - 1) {
+  } else if (wordCount === budget.safeMax) {
     status = 'tight';
-    message = `Tight fit — at max capacity`;
+    message = `At max capacity — no room for pauses`;
     color = 'text-blue-600';
     bgColor = 'bg-blue-50';
   } else {

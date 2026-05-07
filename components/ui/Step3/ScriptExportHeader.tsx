@@ -18,10 +18,9 @@ interface ScriptExportHeaderProps {
     total_duration_seconds: number;
   };
   project: any;
-  onAddScene: () => void;
 }
 
-export function ScriptExportHeader({ scriptData, project, onAddScene }: ScriptExportHeaderProps) {
+export function ScriptExportHeader({ scriptData, project }: ScriptExportHeaderProps) {
   const handleCopyNarration = () => {
     const fullNarration = scriptData.scenes
       .filter(scene => scene.narration && scene.narration.trim().length > 0)
@@ -106,12 +105,6 @@ export function ScriptExportHeader({ scriptData, project, onAddScene }: ScriptEx
           title="Download prompts for external AI generation"
         >
           Export Storyboard
-        </button>
-        <button
-          onClick={onAddScene}
-          className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 hover:bg-indigo-100 transition-colors"
-        >
-          + Add Scene
         </button>
         <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
           {scriptData.scenes.length} Scenes

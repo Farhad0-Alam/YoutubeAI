@@ -108,11 +108,39 @@ VISUAL STORYTELLING RULES (MANDATORY):
 9. Each scene's visual MUST feel like the NEXT frame in a movie — not a random stock photo
 10. image_prompt MUST be 40-80 words of rich cinematic detail
 11. video_prompt MUST specify exact camera motion + subject action + timing
+12. sound field MUST be formatted as an "SFX Engine Prompt" (e.g. "Action: [X], Style: [Y], Acoustic: [Z]")
+13. music field MUST be formatted as a "Suno/Udio Prompt" (e.g. "Genre: [X], BPM: [Y], Mood: [Z], Instruments: [A]")
+═══════════════════════════════════════════════════════════════"""
+
+AUDIO_PRODUCTION_BLOCK = """
+═══════════════════════════════════════════════════════════════
+PRO AUDIO PRODUCTION RULES (ELEVENLABS & SUNO READY):
+═══════════════════════════════════════════════════════════════
+1. **Narration (ElevenLabs Style)**: 
+   - Use highly descriptive emotion tags: [breathless], [authoritative], [whispering-secretive], [booming-announcer].
+   - Use punctuation to control pacing: ... for long pauses, -- for sudden shifts.
+2. **SFX (ElevenLabs Sound Effects Style)**: 
+   - DO NOT say "sound of x". Say: "High-fidelity [Sound], [Texture], [Environment], [Distance]".
+   - Example: "Crisp bone-crunching impact, wet squelch, cinematic bass drop, reverberating in a small stone chamber".
+3. **Music (Suno/Udio Style)**: 
+   - Include specific instrumentation and vibe tags.
+   - Example: "Epic Hybrid Orchestral, 128 BPM, aggressive staccato strings, cinematic brass swells, dark industrial synth pulse, high energy, building tension".
 ═══════════════════════════════════════════════════════════════"""
 
 
 # ── Build the shared prompt ───────────────────────────────────────────────────
-def build_system_prompt(niche_config: dict, style: str, duration_minutes: float, scene_length: int = 15, ai_model: str = "veo3.1", aspect_ratio: str = "16:9") -> str:
+def build_system_prompt(
+    niche_config: dict,
+    topic: str,
+    duration_minutes: float,
+    script_style: str = "Educational",
+    scene_length: int = 15,
+    extra_instructions: str = "",
+    voice_gender: str = "Male",
+    ai_model: str = "veo3.1",
+    aspect_ratio: str = "16:9",
+    visual_style: str = "cinematic"
+) -> str:
     total_seconds = round(duration_minutes * 60)
     
     # Calculate exact durations for each scene to reach target
@@ -143,7 +171,10 @@ def build_system_prompt(niche_config: dict, style: str, duration_minutes: float,
       "duration_seconds": {d},
       "narration": "[emotion] Narration for scene {i+1}",
       "voice_tone": "Tone",
-      "text_overlay": "Caption",
+      "text_overlay": "Engaging on-screen text",
+      "text_position": "AI Auto-Select",
+      "text_animation": "AI Auto-Select",
+      "text_box_style": "AI Auto-Select",
       "visual_description": "Cinematic visual description",
       "search_keyword": "Pexels search terms",
       "image_prompt": "PRODUCTION-READY image prompt",
@@ -159,21 +190,26 @@ def build_system_prompt(niche_config: dict, style: str, duration_minutes: float,
       "transition": "Transition",
       "camera_motion": "Camera motion",
       "color_grading": "Color grading",
+      "vfx": "Visual effects details (MUST NOT BE EMPTY)",
       "sound": "Foley SFX",
       "music": "Music description",
       "timing_and_pacing": "Timing",
-      "emotional_arc": "Emotion"
+      "emotional_arc": "Emotion",
+      "call_to_action_cue": "Specific CTA instruction (MUST NOT BE EMPTY)"
     }}"""
         scenes_example_items.append(item)
     scenes_example_json = ",\n".join(scenes_example_items)
     
     model_rules = get_model_prompt_rules(ai_model, aspect_ratio)
+    # Always include Pro audio rules for external generation (Grok, Veo, Seedance support these in-prompt)
+    audio_block = AUDIO_PRODUCTION_BLOCK 
     
     return f"""You are a top-tier YouTube SEO expert, Cinematic Visual Director, Voice Production Director, AND AI Prompt Engineer for high-CPM USA-based faceless channels.
 
 Your goal: Generate a COMPLETE production-ready script where EVERY field (narration, image_prompt, video_prompt) is perfectly crafted and ready for immediate use in AI video production.
 
 {model_rules}
+MANDATORY VISUAL STYLE: {visual_style}
 
 Guidelines for USA Audience (Ages 25-54):
 1. **Title**: High-CTR, curiosity-driven (MAX 100 chars, ideally under 60). Use Power Words (Revealed, Warning, Secret, Proven).
@@ -193,6 +229,7 @@ Guidelines for USA Audience (Ages 25-54):
 {YOUTUBE_POLICY_BLOCK}
 
 {VISUAL_STORYTELLING_BLOCK}
+{audio_block}
 
 ═══════════════════════════════════════════════════════════════
 SCENE STRUCTURE RULES (MANDATORY):
@@ -205,31 +242,39 @@ Each scene MUST have its specific "duration_seconds" as listed above. Sum MUST e
 ═══════════════════════════════════════════════════════════════
 VOICE & WORD BUDGET RULES (MANDATORY):
 ═══════════════════════════════════════════════════════════════
-Formula: usable_seconds = clip_duration × (1 - breath_overhead)
-         max_words = usable_seconds × (WPM ÷ 60)
-         safe_range = 75%–100% of max_words
+217. WORD COUNT BUDGET (STRICTLY ENFORCE):
+    - 4s Scene  → 8–10 words
+    - 5s Scene  → 9–12 words
+    - 6s Scene  → 11–14 words
+    - 8s Scene  → 15–18 words
+    - 10s Scene → 18–22 words
+    - 12s Scene → 22–27 words
+    - 15s Scene → 28–34 words
+    - 20s Scene → 38–46 words
+    - 30s Scene → 55–68 words
 
-Scene-Type Presets:
-  • Scene 1 (Hook): WPM=165, breath=25% → [excited] or [urgent]
-  • Middle scenes (Body): WPM=150, breath=30% → [confident], [dramatic], or [curious]
-  • Final scene (CTA): WPM=130, breath=35% → [calm] or [warm]
-
-Word Count Guidelines (based on duration D):
-  Hook:  D * 0.75 * 165 / 60 * 0.75 to D * 0.75 * 165 / 60 words
-  Body:  D * 0.70 * 150 / 60 * 0.75 to D * 0.70 * 150 / 60 words
-  CTA:   D * 0.65 * 130 / 60 * 0.75 to D * 0.65 * 130 / 60 words
+218. SAFE RANGE CALCULATION:
+    - Usable Time = Duration × (1 - Breath Overhead)
+    - Max Words = Usable Time × (WPM ÷ 60)
+    - Hook (Start): WPM=165, Breath=25%
+    - Body (Middle): WPM=150, Breath=30%
+    - CTA (End): WPM=130, Breath=35%
 
 VOICE RULES:
-1. EVERY narration MUST start with emotion tag: [excited], [dramatic], [calm], [urgent], [whisper], [confident], [curious], [happy], [warm]
-2. Word count MUST fall within safe_range for the scene's duration
+223. EVERY narration MUST start with emotion tag: [excited], [dramatic], [calm], [urgent], [whisper], [confident], [curious], [happy], [warm]
+224. MANDATORY WORD COUNT: You MUST count the words in your generated narration. If it exceeds the budget for the scene duration, you MUST shorten it.
 3. Scene 1 = [excited] or [urgent] | Final scene = [calm] or [warm]
 4. NEVER repeat same emotion on consecutive scenes
-5. Sound effects = specific Foley (e.g. "Heavy metallic clang reverberating in empty warehouse")
-6. Music = genre, BPM, instruments, energy (e.g. "Dark trap beat, 75 BPM, 808 sub-bass, tension building")
+227. Sound effects = specific Foley (e.g. "Heavy metallic clang reverberating in empty warehouse")
+228. Music = genre, BPM, instruments, energy (e.g. "Dark trap beat, 75 BPM, 808 sub-bass, tension building")
+229. Text Overlays: ALWAYS set "text_position", "text_animation", and "text_box_style" to "AI Auto-Select" unless you have a specific artistic reason to choose a fixed value.
+230. VFX & CTA: These fields MUST be descriptive. DO NOT leave them empty. Describe specific visual effects and on-screen call-to-actions.
+231. Visual Details: "image_subject", "image_setting", etc. MUST be populated with detailed strings, not just one word.
 ═══════════════════════════════════════════════════════════════
 
 Script style: {style}
 Niche tone: {niche_config.get("script_tone")}
+Target Voice: {voice_gender}
 Duration: {duration_minutes} min ({total_seconds}s) | Scenes: {num_scenes} ({durations_str})
 
 RESPOND WITH VALID JSON ONLY. No markdown. No explanation.
@@ -386,7 +431,9 @@ async def generate_with_model(
     scene_length: int = 15,
     llm_model: str = "groq",
     ai_model: str = "veo3.1",
-    aspect_ratio: str = "16:9"
+    aspect_ratio: str = "16:9",
+    voice_gender: str = "Male",
+    visual_style: str = "cinematic"
 ) -> dict:
     """Route generation to the correct AI provider."""
     total_seconds = round(duration_minutes * 60)
@@ -400,7 +447,7 @@ async def generate_with_model(
     expected_scenes = max(1, expected_scenes)
 
     print(f"\n{'='*60}")
-    print(f"🎬 generate_with_model CALLED:")
+    print(f"DEBUG: generate_with_model CALLED:")
     print(f"   duration_minutes = {duration_minutes}")
     print(f"   scene_length     = {scene_length}")
     print(f"   total_seconds    = {total_seconds}")
@@ -409,7 +456,18 @@ async def generate_with_model(
     print(f"   ai_model         = {ai_model}")
     print(f"{'='*60}\n")
 
-    system_prompt = build_system_prompt(niche_config, style, duration_minutes, scene_length, ai_model, aspect_ratio)
+    system_prompt = build_system_prompt(
+        niche_config=niche_config,
+        topic=topic,
+        duration_minutes=duration_minutes,
+        script_style=style,
+        scene_length=scene_length,
+        extra_instructions=extra_instructions,
+        voice_gender=voice_gender,
+        ai_model=ai_model,
+        aspect_ratio=aspect_ratio,
+        visual_style=visual_style
+    )
     user_prompt = build_user_prompt(topic, duration_minutes, extra_instructions)
 
     provider_key = llm_model.lower().strip()
@@ -426,14 +484,14 @@ async def generate_with_model(
     scenes = result.get("scenes", [])
     actual_count = len(scenes)
     print(f"\n{'='*60}")
-    print(f"📊 AI OUTPUT VALIDATION:")
+    print(f"DEBUG: AI OUTPUT VALIDATION:")
     print(f"   Expected scenes: {expected_scenes}")
     print(f"   Actual scenes:   {actual_count}")
     print(f"{'='*60}\n")
 
     if actual_count < expected_scenes:
         logger.warning(f"AI returned {actual_count} scenes, expected {expected_scenes}. Padding missing scenes.")
-        print(f"⚠️  PADDING {expected_scenes - actual_count} missing scenes!")
+        print(f"WARNING: PADDING {expected_scenes - actual_count} missing scenes!")
         # Build the expected durations list (same logic as build_system_prompt)
         num_full = total_seconds // scene_length
         rem = total_seconds % scene_length
@@ -462,7 +520,7 @@ async def generate_with_model(
 
     # Fix total_duration_seconds to match the sum of all scenes
     result["total_duration_seconds"] = sum(s.get("duration_seconds", scene_length) for s in result["scenes"])
-    print(f"✅ Final output: {len(result['scenes'])} scenes, {result['total_duration_seconds']}s total")
+    print(f"SUCCESS: Final output: {len(result['scenes'])} scenes, {result['total_duration_seconds']}s total")
 
     return result
 
@@ -506,11 +564,18 @@ Respond with valid JSON for the scene only. No markdown.
   "image_color_grade": "Color palette", "image_camera_angle": "Camera angle",
   "image_shot_type": "Shot type", "image_style_modifier": "Style",
   "video_prompt": "PRODUCTION-READY video prompt following {ai_model} format",
-  "vfx": "VFX details", "sound": "Specific Foley SFX",
+  "vfx": "Revised visual effects details (MUST NOT BE EMPTY)",
+  "sound": "Specific Foley SFX",
   "music": "Genre, BPM, instruments, energy",
-  "transition": "transition style", "camera_motion": "camera directions",
-  "color_grading": "color intent", "emotional_arc": "emotion",
-  "timing_and_pacing": "timing details", "call_to_action_cue": "CTA details"
+  "transition": "transition style", 
+  "camera_motion": "camera directions",
+  "color_grading": "color intent", 
+  "emotional_arc": "emotion",
+  "text_position": "AI Auto-Select",
+  "text_animation": "AI Auto-Select",
+  "text_box_style": "AI Auto-Select",
+  "timing_and_pacing": "timing details", 
+  "call_to_action_cue": "Specific CTA details (MUST NOT BE EMPTY)"
 }}"""
 
     user_prompt = f"Current Scene Data: {json.dumps(scene_data)}"
@@ -519,3 +584,48 @@ Respond with valid JSON for the scene only. No markdown.
     handler = PROVIDER_MAP.get(provider_key) or call_groq
     
     return await handler(system_prompt, user_prompt)
+
+
+async def generate_ideas(
+    niche_config: dict,
+    topic: str,
+    llm_model: str = "gemini"
+) -> dict:
+    """Generate viral YouTube hooks and titles with multi-provider fallback."""
+    system_prompt = f"""You are an elite YouTube content strategist. Generate exactly 5 viral, highly-clickable YouTube Hook & Title pairs for the topic provided. 
+The hooks MUST be emotionally gripping, controversial, or highly curiosity-driven, avoiding generic AI-sounding intros. It must sound like a real, passionate human creator.
+Niche: {niche_config.get('display_name')}
+Niche Tone: {niche_config.get('script_tone')}
+
+Respond with valid JSON only. No markdown formatting.
+Structure:
+{{
+  "ideas": [
+    {{
+      "title": "SEO optimized, purely viral YouTube title here",
+      "hook": "The first 5 seconds script that instantly grabs attention and sparks deep emotion or curiosity"
+    }}
+  ]
+}}"""
+    user_prompt = f"Topic: {topic}"
+
+    # Try providers in order: Primary -> Gemini -> OpenAI -> Groq
+    providers_to_try = [llm_model.lower().strip()]
+    for p in ["gemini", "openai", "groq"]:
+        if p not in providers_to_try:
+            providers_to_try.append(p)
+
+    last_error = None
+    for provider in providers_to_try:
+        handler = PROVIDER_MAP.get(provider)
+        if not handler: continue
+        
+        try:
+            logger.info(f"Generating ideas with provider: {provider}")
+            return await handler(system_prompt, user_prompt)
+        except Exception as e:
+            last_error = e
+            logger.warning(f"Provider {provider} failed: {str(e)}")
+            continue
+
+    raise last_error or ValueError("All AI providers failed to generate ideas.")

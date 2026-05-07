@@ -22,6 +22,8 @@ export function useNicheTopicLogic() {
   const [ollamaUrl, setOllamaUrl] = useState(existingProject?.settings?.ollama_url || 'http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState(existingProject?.settings?.ollama_model || 'qwen2.5:14b');
   const [customScript, setCustomScript] = useState('');
+  const [voiceGender, setVoiceGender] = useState(existingProject?.voice || 'Male');
+  const [topic, setTopic] = useState(existingProject?.topic || '');
 
   const { isGeneratingHooks, generateHooks } = useVideoGeneration();
   const setGeneratedIdeas = useVideoStore(s => s.setGeneratedIdeas);
@@ -37,16 +39,22 @@ export function useNicheTopicLogic() {
 
   const handleGenerateIdeas = async () => {
     const activeNicheObj = niches.find(n => n.niche_id === selectedNiche);
-    const generatedTopic = activeNicheObj ? activeNicheObj.display_name : selectedNiche;
+    const finalTopic = topic.trim() || (activeNicheObj ? activeNicheObj.display_name : selectedNiche);
+    
+    if (!finalTopic) {
+      toast.error('Please enter a topic or select a niche');
+      return;
+    }
+
     try {
       const ideas = await generateHooks({
         niche_id: selectedNiche,
-        topic: generatedTopic,
+        topic: finalTopic,
         duration_minutes: duration,
         scene_length: sceneLength,
         ai_model: aiVisualModel,
         script_style: 'Educational',
-        voice_gender: 'Male',
+        voice_gender: voiceGender,
         aspect_ratio: aspectRatio,
         llm_model: llmModel,
         ollama_url: ollamaUrl,
@@ -58,6 +66,34 @@ export function useNicheTopicLogic() {
     } catch (e) {
       console.error(e);
       toast.error('Failed to generate ideas');
+    }
+  };
+
+  const handleFullAutoGenerate = async () => {
+    const activeNicheObj = niches.find(n => n.niche_id === selectedNiche);
+    const generatedTopic = activeNicheObj ? activeNicheObj.display_name : selectedNiche;
+    
+    try {
+      await generateScript({
+        niche_id: selectedNiche,
+        topic: generatedTopic,
+        duration_minutes: duration,
+        scene_length: sceneLength,
+        ai_model: aiVisualModel,
+        script_style: 'Educational',
+        voice_gender: voiceGender,
+        aspect_ratio: aspectRatio,
+        llm_model: llmModel,
+        ollama_url: ollamaUrl,
+        ollama_model: ollamaModel,
+        visual_style: selectedStyle,
+        extra_instructions: "",
+        audio_engine: audioEngine
+      } as any);
+      // generateScript already sets step 3 and script data
+    } catch (e) {
+      console.error(e);
+      toast.error('Full Auto Generation Failed');
     }
   };
 
@@ -106,13 +142,14 @@ export function useNicheTopicLogic() {
       duration_minutes: (totalDuration || (duration * 60)) / 60,
       scene_length: sceneLength,
       ai_model: aiVisualModel,
-      voice: 'Male',
+      voice: voiceGender,
       aspect_ratio: aspectRatio,
       status: "script_ready",
       settings: {
         llm_model: llmModel,
         ollama_url: ollamaUrl,
         ollama_model: ollamaModel,
+        audio_engine: audioEngine
       },
     };
     
@@ -149,9 +186,14 @@ export function useNicheTopicLogic() {
     setOllamaModel,
     customScript,
     setCustomScript,
+    topic,
+    setTopic,
+    voiceGender,
+    setVoiceGender,
     isGeneratingHooks,
     handleSelectNiche,
     handleGenerateIdeas,
+    handleFullAutoGenerate,
     handleCustomScriptSubmit
   };
 }

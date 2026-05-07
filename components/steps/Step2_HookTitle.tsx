@@ -4,6 +4,7 @@ import { SubNicheModal } from '../ui/Step2/SubNicheModal';
 import { HookIdeaCard } from '../ui/Step2/HookIdeaCard';
 import { CustomIdeaEditor } from '../ui/Step2/CustomIdeaEditor';
 import { Loader2, ArrowRight, RefreshCw, Sparkles } from 'lucide-react';
+import { GenerationProgressModal } from '../ui/GenerationProgressModal';
 
 export function Step2_HookTitle() {
   const {
@@ -31,6 +32,19 @@ export function Step2_HookTitle() {
     handleGenerateMore,
     setStep
   } = useHookTitleLogic();
+
+  const [modalProgress, setModalProgress] = React.useState(0);
+
+  React.useEffect(() => {
+    if (isGenerating) {
+      const interval = setInterval(() => {
+        setModalProgress(prev => (prev < 3 ? prev + 1 : prev));
+      }, 5000); // Script takes longer
+      return () => clearInterval(interval);
+    } else {
+      setModalProgress(0);
+    }
+  }, [isGenerating]);
 
   if (!generatedIdeas || generatedIdeas.length === 0) {
     return (
@@ -140,6 +154,19 @@ export function Step2_HookTitle() {
           </button>
         </div>
       </div>
+
+      <GenerationProgressModal
+        isOpen={isGenerating}
+        title="Writing Full Video Script"
+        subtitle="Our AI is crafting a high-retention script for your topic..."
+        steps={[
+          "Initializing script structure",
+          "Drafting cinematic visuals",
+          "Optimizing narration pacing",
+          "Adding production details & VFX"
+        ]}
+        currentStep={modalProgress}
+      />
     </div>
   );
 }

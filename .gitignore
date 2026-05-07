@@ -47,6 +47,7 @@ backend/database/postgres.py.bak
 *.zip
 outputs/
 backend/venv_new/
+backend/venv_run/
 temp/
 .venv/
-venv/
+venv/

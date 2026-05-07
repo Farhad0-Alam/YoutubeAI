@@ -13,7 +13,8 @@ class GenerateRequest(BaseModel):
     script_style: str
     scene_length: Optional[int] = 15
     extra_instructions: str = ""
-    voice_gender: str = "Male"
+    voice_gender: Optional[str] = "Male"
+    visual_style: Optional[str] = "cinematic"
     llm_model: Optional[str] = "groq"
     ai_model: Optional[str] = "veo3.1"
     aspect_ratio: Optional[str] = "16:9"
@@ -22,7 +23,7 @@ class GenerateRequest(BaseModel):
 async def api_generate_script(request: GenerateRequest):
     # ── DEBUG: Print exactly what the frontend sent ──────────────────────────
     print(f"\n{'='*60}")
-    print(f"🔍 BACKEND RECEIVED REQUEST:")
+    print(f"DEBUG: BACKEND RECEIVED REQUEST:")
     print(f"   duration_minutes = {request.duration_minutes}")
     print(f"   scene_length     = {request.scene_length}")
     total_sec = round(request.duration_minutes * 60)
@@ -48,7 +49,9 @@ async def api_generate_script(request: GenerateRequest):
             extra_instructions=request.extra_instructions,
             llm_model=request.llm_model or "groq",
             ai_model=request.ai_model or "veo3.1",
-            aspect_ratio=request.aspect_ratio or "16:9"
+            aspect_ratio=request.aspect_ratio or "16:9",
+            voice_gender=request.voice_gender or "Male",
+            visual_style=request.visual_style or "cinematic"
         )
 
         # ── Build full SEO description from parts ────────────────────────────
@@ -90,6 +93,8 @@ class RewriteSceneRequest(BaseModel):
     scene_data: dict
     instructions: str = "Improve this scene"
     llm_model: Optional[str] = "groq"
+    ai_model: Optional[str] = "veo3.1"
+    aspect_ratio: Optional[str] = "16:9"
 
 @router.post("/rewrite_scene")
 async def api_rewrite_scene(request: RewriteSceneRequest):
@@ -104,8 +109,38 @@ async def api_rewrite_scene(request: RewriteSceneRequest):
             topic=request.topic,
             scene_data=request.scene_data,
             instructions=request.instructions,
-            llm_model=request.llm_model or "groq"
+            llm_model=request.llm_model or "groq",
+            ai_model=request.ai_model or "veo3.1",
+            aspect_ratio=request.aspect_ratio or "16:9"
         )
         return revised_scene
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+class GenerateIdeasRequest(BaseModel):
+    niche_id: str
+    topic: str
+    llm_model: Optional[str] = "groq"
+
+@router.post("/generate_ideas")
+async def api_generate_ideas(request: GenerateIdeasRequest):
+    niche_config = next((n for n in NICHE_CONFIGS if n["niche_id"] == request.niche_id), None)
+    if not niche_config:
+        raise HTTPException(status_code=400, detail=f"Invalid niche_id: {request.niche_id}")
+
+    try:
+        from backend.services.ai_service import generate_ideas
+        ideas = await generate_ideas(
+            niche_config=niche_config,
+            topic=request.topic,
+            llm_model=request.llm_model or "groq"
+        )
+        return ideas
+    except Exception as e:
+        print(f"Error generating ideas: {e}")
+        error_msg = str(e)
+        if "401" in error_msg or "Invalid API Key" in error_msg:
+            error_msg = "AI Provider Error: Invalid API Key. Check your .env file."
+        elif "429" in error_msg or "rate limit" in error_msg.lower():
+            error_msg = "AI Provider Error: Rate limit reached. Try another model."
+        raise HTTPException(status_code=500, detail=error_msg)

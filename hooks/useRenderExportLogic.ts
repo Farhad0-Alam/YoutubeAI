@@ -9,7 +9,7 @@ export function useRenderExportLogic() {
   const { project, scriptData, voices, setVoices, setStep } = useVideoStore();
   const saveProject = useHistoryStore(state => state.saveProject);
   
-  const [selectedVoice, setSelectedVoice] = useState('alloy');
+  const [selectedVoice, setSelectedVoice] = useState('en-US-GuyNeural');
   const [isPrepping, setIsPrepping] = useState(false);
   const [renderComplete, setRenderComplete] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
@@ -19,8 +19,15 @@ export function useRenderExportLogic() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
-    api.getVoices().then(setVoices).catch(console.error);
-  }, [setVoices]);
+    api.getVoices().then(data => {
+      setVoices(data);
+      // Auto-select first voice matching project gender
+      if (project?.voice) {
+        const match = data.find((v: any) => v.gender.toLowerCase() === project.voice.toLowerCase());
+        if (match) setSelectedVoice(match.id);
+      }
+    }).catch(console.error);
+  }, [setVoices, project?.voice]);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);

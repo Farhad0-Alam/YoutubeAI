@@ -26,26 +26,33 @@ export const api = {
     ollama_url?: string;
     ollama_model?: string;
   }) {
-    const prompt = `You are an elite YouTube content strategist. The user wants to make a video about: "${data.topic}".
-Generate exactly 5 viral, highly-clickable YouTube Hook & Title pairs for this topic. 
-The hooks MUST be emotionally gripping, controversial, or highly curiosity-driven, avoiding generic AI-sounding intros. It must sound like a real, passionate human creator.
-Respond with valid JSON only. No markdown formatting (no \`\`\`json). Pure JSON only.
-Structure:
-{
-  "ideas": [
-    {
-      "title": "SEO optimized, purely viral YouTube title here",
-      "hook": "The first 5 seconds script that instantly grabs attention and sparks deep emotion or curiosity"
-    }
-  ]
-}`;
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    const requestedModel = data.llm_model || "gemini";
+
+    // Helper to call backend for ideas
+    const callBackendForIdeas = async (model: string) => {
+      const resp = await fetch(`${backendUrl}/api/generate_ideas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          niche_id: data.niche_id,
+          topic: data.topic,
+          llm_model: model
+        })
+      });
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(`Backend Ideas Generation Failed: ${txt}`);
+      }
+      return await resp.json();
+    };
 
     let responseText = "";
     const openAIKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY || "";
     const qwenKey = process.env.NEXT_PUBLIC_QWEN_API_KEY || "";
-    const requestedModel = data.llm_model || "gemini";
 
     if (requestedModel === "ollama" && data.ollama_url) {
+      const prompt = `You are an elite YouTube content strategist. The user wants to make a video about: "${data.topic}". Generate exactly 5 viral, highly-clickable YouTube Hook & Title pairs for this topic. Respond with valid JSON only. Structure: { "ideas": [ { "title": "...", "hook": "..." } ] }`;
       const ollamaEndpoint = data.ollama_url.endsWith('/') ? `${data.ollama_url}api/chat` : `${data.ollama_url}/api/chat`;
       const response = await fetch(ollamaEndpoint, {
         method: "POST",
@@ -69,44 +76,39 @@ Structure:
       responseText = resData.message?.content || "{}";
 
     } else if (requestedModel === "qwen") {
-      const response = await fetch("/api/qwen", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "chat",
-          key: qwenKey,
-          payload: {
-            messages: [
-              { role: "system", content: "You are a helpful JSON generation assistant. Always return valid raw JSON without markdown." },
-              { role: "user", content: prompt }
-            ]
-          }
-        })
-      });
-      if (!response.ok) throw new Error("Qwen Hooks Generation Failed");
-      const resData = await response.json();
-      responseText = resData.choices?.[0]?.message?.content || "{}";
+      return await callBackendForIdeas("groq"); // Fallback to Groq for now as qwen is not in backend ai_service yet, or use direct fetch if needed
     } else if (requestedModel === "openai") {
-      const response = await fetch("/api/openai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "chat",
-          key: openAIKey,
-          payload: {
-            messages: [
-              { role: "system", content: "You are a helpful JSON generation assistant. Always return valid raw JSON without markdown." },
-              { role: "user", content: prompt }
-            ]
-          }
-        })
-      });
-
-      if (!response.ok) throw new Error("OpenAI Hooks Generation Failed");
-      const resData = await response.json();
-      responseText = resData.choices?.[0]?.message?.content || "{}";
-    } else {
+      // Try local backend first for better reliability with Groq/OpenAI
       try {
+        return await callBackendForIdeas("openai");
+      } catch (e) {
+        // Fallback to direct fetch if backend fails
+        const prompt = `You are an elite YouTube content strategist. The user wants to make a video about: "${data.topic}". Generate exactly 5 viral, highly-clickable YouTube Hook & Title pairs for this topic. Respond with valid JSON only. Structure: { "ideas": [ { "title": "...", "hook": "..." } ] }`;
+        const response = await fetch("/api/openai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "chat",
+            key: openAIKey,
+            payload: {
+              messages: [
+                { role: "system", content: "You are a helpful JSON generation assistant. Always return valid raw JSON without markdown." },
+                { role: "user", content: prompt }
+              ]
+            }
+          })
+        });
+
+        if (!response.ok) throw new Error("OpenAI Hooks Generation Failed");
+        const resData = await response.json();
+        responseText = resData.choices?.[0]?.message?.content || "{}";
+      }
+    } else if (requestedModel === "groq") {
+        return await callBackendForIdeas("groq");
+    } else {
+      // Default: Gemini with Fallback to Groq
+      try {
+        const prompt = `You are an elite YouTube content strategist. The user wants to make a video about: "${data.topic}". Generate exactly 5 viral, highly-clickable YouTube Hook & Title pairs for this topic. Respond with valid JSON only. Structure: { "ideas": [ { "title": "...", "hook": "..." } ] }`;
         const ai = createGeminiClient();
         const model = ai.getGenerativeModel({ 
           model: "gemini-2.0-flash",
@@ -118,8 +120,9 @@ Structure:
         const result = await model.generateContent(prompt);
         responseText = result.response.text() || "{}";
       } catch (err: any) {
-        if (err?.status === 429 || err?.message?.includes("exceeded") || err?.status === "RESOURCE_EXHAUSTED") {
-          throw new Error("Gemini API Quota Exceeded. Please try again later or switch to OpenAI/Ollama in settings.");
+        console.warn("Gemini Failed, falling back to Groq:", err.message);
+        if (err?.status === 429 || err?.message?.includes("exceeded") || err?.status === "RESOURCE_EXHAUSTED" || err?.message?.includes("fetch")) {
+           return await callBackendForIdeas("groq");
         }
         throw new Error(err?.message || "Failed to generate content with Gemini API.");
       }
@@ -184,6 +187,8 @@ Structure:
     scene_data: any;
     instructions?: string;
     llm_model?: string;
+    ai_model?: string;
+    aspect_ratio?: string;
   }) {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
     try {
@@ -195,7 +200,9 @@ Structure:
           topic: data.topic,
           scene_data: data.scene_data,
           instructions: data.instructions || "Improve this scene",
-          llm_model: data.llm_model || "groq"
+          llm_model: data.llm_model || "groq",
+          ai_model: data.ai_model || "veo3.1",
+          aspect_ratio: data.aspect_ratio || "16:9"
         })
       });
 
@@ -505,7 +512,7 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          voice: "en-US-AriaNeural", // default Edge-TTS voice
+          voice: data.voice || "en-US-GuyNeural",
           scenes: data.scenes.map((s: any) => ({
             scene_number: s.scene_number,
             narration: s.narration
@@ -536,13 +543,16 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
   },
 
   async getVoices() {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    try {
+      const resp = await fetch(`${backendUrl}/api/voices`);
+      if (resp.ok) return await resp.json();
+    } catch (e) {
+      console.error("Failed to fetch voices from backend", e);
+    }
     return [
-      { id: "alloy", name: "Alloy", gender: "Neutral", accent: "American", label: "Neutral" },
-      { id: "echo", name: "Echo", gender: "Male", accent: "American", label: "Mellow" },
-      { id: "fable", name: "Fable", gender: "Male", accent: "British", label: "Expressive" },
-      { id: "onyx", name: "Onyx", gender: "Male", accent: "American", label: "Deep" },
-      { id: "nova", name: "Nova", gender: "Female", accent: "American", label: "Professional" },
-      { id: "shimmer", name: "Shimmer", gender: "Female", accent: "American", label: "Clear" }
+      { id: "en-US-GuyNeural", name: "Guy", gender: "Male", accent: "US", label: "Professional Male" },
+      { id: "en-US-AriaNeural", name: "Aria", gender: "Female", accent: "US", label: "Confident Female" }
     ];
   },
 

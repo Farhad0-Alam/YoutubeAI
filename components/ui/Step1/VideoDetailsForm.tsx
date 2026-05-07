@@ -17,6 +17,8 @@ interface VideoDetailsFormProps {
   setOllamaModel: (val: string) => void;
   customScript: string;
   setCustomScript: (val: string) => void;
+  voiceGender: string;
+  setVoiceGender: (val: string) => void;
 }
 
 export function VideoDetailsForm({
@@ -27,7 +29,8 @@ export function VideoDetailsForm({
   llmModel, setLlmModel,
   ollamaUrl, setOllamaUrl,
   ollamaModel, setOllamaModel,
-  customScript, setCustomScript
+  customScript, setCustomScript,
+  voiceGender, setVoiceGender
 }: VideoDetailsFormProps) {
 
   const sceneCounts = [
@@ -109,6 +112,23 @@ export function VideoDetailsForm({
             <option value="9:16">9:16 (Vertical)</option>
             <option value="1:1">1:1 (Square)</option>
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">6. Voice Gender</label>
+          <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-300">
+            <button
+              onClick={() => setVoiceGender('Male')}
+              className={`flex-1 py-2 text-xs font-bold rounded-md transition-all ${voiceGender === 'Male' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+            >
+              MALE
+            </button>
+            <button
+              onClick={() => setVoiceGender('Female')}
+              className={`flex-1 py-2 text-xs font-bold rounded-md transition-all ${voiceGender === 'Female' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+            >
+              FEMALE
+            </button>
+          </div>
         </div>
       </div>
 

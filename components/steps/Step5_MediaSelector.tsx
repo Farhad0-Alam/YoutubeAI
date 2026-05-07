@@ -62,8 +62,14 @@ export function Step5_MediaSelector() {
           
           <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 sm:p-6 z-50">
             <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between gap-4">
-              <button onClick={() => setStep(4)} className="w-full sm:w-auto px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold border border-gray-300 shadow-sm hover:bg-gray-200 transition-colors">
-                Back to Storyboard
+              <button 
+                onClick={() => {
+                  const hasSubScenes = scriptData.scenes.some(s => s.sub_scenes && s.sub_scenes.length > 0);
+                  setStep(hasSubScenes ? 4 : 3);
+                }} 
+                className="w-full sm:w-auto px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold border border-gray-300 shadow-sm hover:bg-gray-200 transition-colors"
+              >
+                {scriptData.scenes.some(s => s.sub_scenes && s.sub_scenes.length > 0) ? 'Back to Storyboard' : 'Back to Script'}
               </button>
               <button onClick={() => setStep(6)} className="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-sm hover:bg-indigo-700 transition-colors">
                 Continue to Brand Kit

@@ -232,6 +232,9 @@ export const api = {
     topic?: string;
     hook?: string;
     title?: string;
+    cta?: string;
+    isLastScene?: boolean;
+    isMidVideoCTA?: boolean;
   }) {
     const interval = data.chunk_interval || 2;
     const numSubScenes = Math.max(1, Math.ceil(data.duration_seconds / interval));
@@ -262,6 +265,27 @@ VISUAL DESCRIPTION:
 "${data.visual_description}"
 
 KEYWORDS: ${data.search_keyword}
+
+${data.isLastScene ? `
+═══════════════════════════════════════════════════════════════
+CRITICAL: LAST SCENE CALL TO ACTION (CTA)
+═══════════════════════════════════════════════════════════════
+This is the FINAL scene of the video. 
+The LAST sub-scene (sub_scene_number: ${numSubScenes}) MUST include a clear Call To Action (CTA).
+CTA Content: "${data.cta || 'Subscribe for more!'}"
+Ensure the 'call_to_action_cue' field for the LAST sub-scene contains this instruction.
+═══════════════════════════════════════════════════════════════
+` : ''}
+
+${data.isMidVideoCTA ? `
+═══════════════════════════════════════════════════════════════
+CRITICAL: MID-VIDEO HOOK CTA
+═══════════════════════════════════════════════════════════════
+This is a mid-video hook scene for a long-form video.
+Include a subtle 'hook-style' Call To Action cue in the LAST sub-scene of this scene.
+Example: "Liked this? Subscribe for the full story!" or "Drop a comment if you agree!"
+═══════════════════════════════════════════════════════════════
+` : ''}
 
 TASK: Split this scene into exactly ${numSubScenes} sub-scenes for AI video production.
 

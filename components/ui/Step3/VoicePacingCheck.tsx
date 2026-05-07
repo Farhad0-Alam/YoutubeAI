@@ -128,7 +128,7 @@ export function VoicePacingCheck({ scenes, totalDurationSeconds }: VoicePacingCh
       {/* Formula Reference */}
       <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
         <div className="text-[9px] font-mono text-gray-500 leading-relaxed">
-          <span className="font-bold text-gray-700">FORMULA:</span> usable_seconds = clip_duration × (1 - breath_overhead) → max_words = usable_seconds × (WPM ÷ 60) → safe_range = 75%–100%
+          <span className="font-bold text-gray-700">FORMULA:</span> 2 Meaningful Words (3+ chars) per second. Words like "a", "is", "to", "in" are NOT counted.
         </div>
       </div>
     </div>

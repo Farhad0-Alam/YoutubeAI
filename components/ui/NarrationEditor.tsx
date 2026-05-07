@@ -82,15 +82,17 @@ SCENE CONTEXT:
 - Scene Position: ${sceneType === 'hook' ? 'OPENING HOOK (Scene 1)' : sceneType === 'cta' ? 'CLOSING CTA (Final Scene)' : `BODY (Scene ${sceneIndex + 1} of ${totalScenes})`}
 - Scene Duration: ${clipDuration} seconds
 
-WORD BUDGET (MANDATORY):
-- Safe word range: ${budget.safeMin}–${budget.safeMax} words
-- Voice preset: ${preset.label} (${preset.wpm} WPM, ${Math.round(preset.breathOverhead * 100)}% breath overhead)
+WORD BUDGET (STRICTLY ENFORCE):
+- MINIMUM: ${budget.minWords} meaningful words (3+ characters each)
+- TARGET: ${budget.minWords + 5} words
+- Voice preset: ${preset.label} (${preset.wpm} WPM)
 - Required emotion: ${preset.emotion}
 
 RULES:
 1. Start with emotion tag: [${preset.emotion}]
-2. Word count MUST be between ${budget.safeMin} and ${budget.safeMax} words (NOT counting the emotion tag)
-3. ${sceneType === 'hook' ? 'Make it attention-grabbing, high-energy, create instant curiosity' : sceneType === 'cta' ? 'Make it warm, inviting, with a clear call to action (subscribe, like, comment)' : 'Make it informative, engaging, building on the topic with vivid language'}
+2. Every scene MUST have AT LEAST ${budget.minWords} meaningful words.
+3. Meaningful words = words with 3 or more characters. Do NOT count "a", "is", "to", "of", etc.
+4. ${sceneType === 'hook' ? 'Make it attention-grabbing, high-energy, create instant curiosity' : sceneType === 'cta' ? 'Make it warm, inviting, with a clear call to action (subscribe, like, comment)' : 'Make it informative, engaging, building on the topic with vivid language'}
 4. Sound natural and human — avoid robotic or generic phrasing
 5. Match the visual context provided
 
@@ -128,7 +130,7 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
       const budget = calculateWordBudget(clipDuration, sceneIndex, totalScenes);
       const sceneType = detectSceneType(sceneIndex, totalScenes);
       const preset = getPresetForSceneType(sceneType);
-      onChange(`[${preset.emotion}] (AI generation failed — please write ${budget.safeMin}–${budget.safeMax} words here)`);
+      onChange(`[${preset.emotion}] (AI generation failed — please write at least ${budget.minWords} meaningful words here)`);
     } finally {
       setIsGenerating(false);
     }
@@ -140,9 +142,10 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
     validation = validateNarration(value || '', clipDuration, sceneIndex, totalScenes);
   }
 
-  // Simple word count — strip emotion tags before counting
+  // Meaningful word count (3+ letters)
   const cleanText = (value || '').replace(/\[.*?\]/g, '').trim();
-  const wordCount = cleanText.length > 0 ? cleanText.split(/\s+/).filter(w => w.length > 0).length : 0;
+  const wordCount = cleanText.length > 0 ? cleanText.split(/\s+/).filter(w => w.length > 2).length : 0;
+  const rawWordCount = cleanText.length > 0 ? cleanText.split(/\s+/).filter(w => w.length > 0).length : 0;
 
   // Detect current emotion tag
   const emotionMatch = (value || '').match(/^\[([^\]]+)\]/);
@@ -153,6 +156,7 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
       <div className="flex items-center justify-between mb-2">
         <label className={`text-xs uppercase tracking-wider font-bold flex items-center gap-2 ${labelClass}`}>
           <Volume2 className={`w-4 h-4 ${iconClass}`} /> {label}
+          <span className="text-[10px] font-medium opacity-60 normal-case ml-1 tracking-normal">({clipDuration}s @ 2w/s)</span>
         </label>
         <div className="flex items-center gap-2">
           {/* AI Narration Button */}
@@ -206,11 +210,11 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
                     validation.status === 'over' ? 'bg-red-500' :
                       validation.status === 'under' ? 'bg-amber-400' : 'bg-gray-300'
                 }`}
-              style={{ width: `${Math.min((validation.wordCount / validation.budget.safeMax) * 100, 100)}%` }}
+              style={{ width: `${Math.min((wordCount / (validation.budget?.maxWords || 1)) * 100, 100)}%` }}
             />
           </div>
           <span className="text-[10px] font-bold font-mono shrink-0">
-            {validation.wordCount}/{validation.budget.safeMin}–{validation.budget.safeMax} words
+            {wordCount}/{validation.budget?.minWords} min meaningful words
           </span>
           <span className="text-[9px] font-semibold shrink-0">
             {validation.status === 'perfect' ? '✅' : validation.status === 'over' ? '🔴' : validation.status === 'under' ? '🟠' : validation.status === 'tight' ? '🟡' : ''}
@@ -220,7 +224,7 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
       ) : (
         value && (
           <div className="absolute bottom-3 right-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest pointer-events-none">
-            {wordCount} words
+            {wordCount} meaningful words
           </div>
         )
       )}

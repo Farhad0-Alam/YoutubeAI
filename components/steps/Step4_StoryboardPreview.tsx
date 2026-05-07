@@ -40,6 +40,9 @@ export function Step4_StoryboardPreview() {
         topic: project.topic,
         hook: project.hook,
         title: project.title,
+        cta: scriptData.cta,
+        isLastScene: sceneIdx === scriptData.scenes.length - 1,
+        isMidVideoCTA: (project.duration_minutes || 0) > 5 && sceneIdx === 2, // 3rd scene (index 2)
       });
       if (result.sub_scenes && result.sub_scenes.length > 0) {
         updateScene(sceneIdx, { sub_scenes: result.sub_scenes });

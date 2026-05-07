@@ -242,23 +242,18 @@ Each scene MUST have its specific "duration_seconds" as listed above. Sum MUST e
 ═══════════════════════════════════════════════════════════════
 VOICE & WORD BUDGET RULES (MANDATORY):
 ═══════════════════════════════════════════════════════════════
-217. WORD COUNT BUDGET (STRICTLY ENFORCE):
-    - 4s Scene  → 8–10 words
-    - 5s Scene  → 9–12 words
-    - 6s Scene  → 11–14 words
-    - 8s Scene  → 15–18 words
-    - 10s Scene → 18–22 words
-    - 12s Scene → 22–27 words
-    - 15s Scene → 28–34 words
-    - 20s Scene → 38–46 words
-    - 30s Scene → 55–68 words
-
-218. SAFE RANGE CALCULATION:
-    - Usable Time = Duration × (1 - Breath Overhead)
-    - Max Words = Usable Time × (WPM ÷ 60)
-    - Hook (Start): WPM=165, Breath=25%
-    - Body (Middle): WPM=150, Breath=30%
-    - CTA (End): WPM=130, Breath=35%
+217. MEANINGFUL WORD COUNT BUDGET (STRICTLY ENFORCE):
+    - TARGET PACING: 2 TO 4 MEANINGFUL WORDS PER SECOND.
+    - WORD COUNTING RULE: Do NOT count words with only 1 or 2 letters (e.g., "a", "is", "to", "in", "it"). ONLY count "Meaningful Words" (words with 3+ characters).
+    - 4s Scene  → 8-16 meaningful words
+    - 5s Scene  → 10-20 meaningful words
+    - 6s Scene  → 12-24 meaningful words
+    - 8s Scene  → 16-32 meaningful words
+    - 10s Scene → 20-40 meaningful words
+    - 12s Scene → 24-48 meaningful words
+    - 15s Scene → 30-60 meaningful words
+    - 20s Scene → 40-80 meaningful words
+    - 30s Scene → 60-120 meaningful words
 
 VOICE RULES:
 223. EVERY narration MUST start with emotion tag: [excited], [dramatic], [calm], [urgent], [whisper], [confident], [curious], [happy], [warm]
@@ -272,7 +267,7 @@ VOICE RULES:
 231. Visual Details: "image_subject", "image_setting", etc. MUST be populated with detailed strings, not just one word.
 ═══════════════════════════════════════════════════════════════
 
-Script style: {style}
+Script style: {script_style}
 Niche tone: {niche_config.get("script_tone")}
 Target Voice: {voice_gender}
 Duration: {duration_minutes} min ({total_seconds}s) | Scenes: {num_scenes} ({durations_str})

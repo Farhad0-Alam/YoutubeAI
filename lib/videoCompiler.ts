@@ -64,19 +64,37 @@ export async function compileAndDownloadVideo(scenes: any[], aspectRatio: string
 
     let stopRecording = false;
 
-    for (let i = 0; i < scenes.length; i++) {
+    const scenesToProcess = [];
+    for (const scene of scenes) {
+      if (scene.sub_scenes && scene.sub_scenes.length > 0) {
+        for (const sub of scene.sub_scenes) {
+          scenesToProcess.push({
+            ...sub,
+            // Inherit audio/media from parent if missing in sub
+            audio_url: sub.audio_url || scene.audio_url,
+            media_path: sub.media_path || scene.media_path,
+            media_type: sub.media_type || scene.media_type,
+            call_to_action_cue: sub.call_to_action_cue || (sub === scene.sub_scenes[scene.sub_scenes.length - 1] ? scene.call_to_action_cue : null)
+          });
+        }
+      } else {
+        scenesToProcess.push(scene);
+      }
+    }
+
+    for (let i = 0; i < scenesToProcess.length; i++) {
       if (stopRecording) break;
-      const scene = scenes[i];
-      const durationMs = (scene.duration_seconds || 15) * 1000;
+      const part = scenesToProcess[i];
+      const durationMs = (part.duration_seconds || 5) * 1000;
       
       // Load visual
-      const visualElement = await loadVisual(scene);
+      const visualElement = await loadVisual(part);
       
-      // Load Audio via Web Audio API so we can pipe it into the stream
+      // Load Audio via Web Audio API
       let audioNode: AudioBufferSourceNode | null = null;
-      if (scene.audio_url) {
+      if (part.audio_url) {
         try {
-          const resp = await fetch(scene.audio_url);
+          const resp = await fetch(part.audio_url);
           const arrayBuffer = await resp.arrayBuffer();
           const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
           audioNode = audioCtx.createBufferSource();
@@ -84,26 +102,34 @@ export async function compileAndDownloadVideo(scenes: any[], aspectRatio: string
           audioNode.connect(dest);
           audioNode.start();
         } catch (e) {
-          console.warn("Could not load audio track for scene", i);
+          console.warn("Could not load audio track for part", i);
         }
       }
 
-      // Render loop for this scene
+      // Render loop for this part
       const start = Date.now();
       while (Date.now() - start < durationMs) {
+        ctx.clearRect(0, 0, width, height); // Clear frame
+        
         if (visualElement instanceof HTMLVideoElement) {
            ctx.drawImage(visualElement, 0, 0, width, height);
         } else if (visualElement instanceof HTMLImageElement) {
            ctx.drawImage(visualElement, 0, 0, width, height);
         } else {
-           // Fallback to black screen
            ctx.fillStyle = "black";
            ctx.fillRect(0, 0, width, height);
         }
         
-        // Render Text Overlay removed
+        // Render CTA if present on the last frame/part
+        if (part.call_to_action_cue && i === scenesToProcess.length - 1) {
+          ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          ctx.fillRect(0, height - 80, width, 80);
+          ctx.fillStyle = "white";
+          ctx.font = "bold 40px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(part.call_to_action_cue, width / 2, height - 30);
+        }
         
-        // Wait till next frame (~30fps)
         await new Promise(r => setTimeout(r, 1000 / 30));
       }
 

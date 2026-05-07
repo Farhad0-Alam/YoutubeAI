@@ -38,6 +38,8 @@ export function Step1_NicheTopic() {
     setVoiceGender,
     audioEngine,
     setAudioEngine,
+    projectName,
+    setProjectName,
     isGeneratingHooks,
     handleSelectNiche,
     handleGenerateIdeas,
@@ -62,7 +64,19 @@ export function Step1_NicheTopic() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-6 font-outfit">Create New Video</h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 font-outfit">Create New Video</h1>
+          <div className="flex-1 max-w-sm">
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1">Project Name (Optional)</label>
+            <input 
+              type="text"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              placeholder="e.g. My Viral AI Video"
+              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white shadow-sm transition-all"
+            />
+          </div>
+        </div>
         
         {/* Section 1: Niche Selection */}
         <div className="bg-white border border-gray-200 rounded-xl mb-8 shadow-sm overflow-hidden">
@@ -84,35 +98,14 @@ export function Step1_NicheTopic() {
           </div>
         </div>
 
-        {/* Section 2: Video Topic */}
-        <div className="bg-white border border-gray-200 rounded-xl mb-8 shadow-sm overflow-hidden">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md">2</div>
-              <h2 className="text-xl font-bold text-gray-900">What is this video about?</h2>
-            </div>
-            
-            <div className="space-y-4">
-              <input
-                type="text"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g. 5 Secret ways to lose weight fast, or Top 10 Crypto gems for 2024"
-                className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl text-lg font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all shadow-inner"
-              />
-              <p className="text-xs text-gray-400 flex items-center gap-1.5 px-1">
-                <Sparkles className="w-3 h-3 text-indigo-400" />
-                Tip: Be specific for better AI results. The AI will use this to brainstorm 5 viral angles.
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Section 2: AI Brain will handle the topic selection automatically */}
+
 
         {/* Section 3: Visual Style */}
         <div className="bg-white border border-gray-200 rounded-xl mb-8 shadow-sm overflow-hidden">
           <div className="p-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md">3</div>
+              <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md">2</div>
               <h2 className="text-xl font-bold text-gray-900">Choose visual style</h2>
             </div>
             
@@ -127,7 +120,7 @@ export function Step1_NicheTopic() {
         {/* Section 4: Video Details */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md">4</div>
+            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-md">3</div>
             <h2 className="text-xl font-bold text-gray-900">Video Details & AI Models</h2>
           </div>
         

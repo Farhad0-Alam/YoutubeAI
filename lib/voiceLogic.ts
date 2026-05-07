@@ -131,17 +131,16 @@ export function calculateWordBudget(
     ? VOICE_PRESETS.find(p => p.id === overridePreset)!
     : getPresetForSceneType(sceneType);
 
-  const usableSeconds = clipDuration * (1 - preset.breathOverhead);
-  const wordsPerSec = preset.wpm / 60;
-  const maxWords = Math.round(usableSeconds * wordsPerSec);
-  const safeMin = Math.round(maxWords * 0.75);
+  const wordsPerSec = 2; // Target: At least 2 meaningful words per second
+  const minWords = Math.round(clipDuration * wordsPerSec);
+  const maxWords = Math.round(clipDuration * 4); // ABSOLUTE MAX: 4 meaningful words per second
 
   return {
     clipDuration,
-    usableSeconds: Math.round(usableSeconds * 100) / 100,
-    wordsPerSec: Math.round(wordsPerSec * 1000) / 1000,
+    usableSeconds: clipDuration,
+    wordsPerSec,
+    minWords,
     maxWords,
-    safeMin,
     safeMax: maxWords,
     sceneType,
     preset
@@ -169,7 +168,7 @@ export function validateNarration(
   // Strip emotion tags like [dramatic] before counting
   const cleanText = (narrationText || '').replace(/\[.*?\]/g, '').trim();
   const wordCount = cleanText.length > 0
-    ? cleanText.split(/\s+/).filter(w => w.length > 0).length
+    ? cleanText.split(/\s+/).filter(w => w.length > 2).length
     : 0;
 
   const budget = calculateWordBudget(clipDuration, sceneIndex, totalScenes);
@@ -181,17 +180,17 @@ export function validateNarration(
 
   if (wordCount === 0) {
     status = 'empty';
-    message = `Need ${budget.safeMin}–${budget.safeMax} words`;
+    message = `Need ${budget.minWords}–${budget.maxWords} meaningful words`;
     color = 'text-gray-400';
     bgColor = 'bg-gray-50';
   } else if (wordCount > budget.safeMax) {
     const overBy = wordCount - budget.safeMax;
     status = 'over';
-    message = `${overBy} word${overBy > 1 ? 's' : ''} OVER — will sound rushed`;
+    message = `${overBy} word${overBy > 1 ? 's' : ''} OVER — max is ${budget.maxWords} (4 w/s)`;
     color = 'text-red-600';
     bgColor = 'bg-red-50';
-  } else if (wordCount < budget.safeMin) {
-    const underBy = budget.safeMin - wordCount;
+  } else if (wordCount < budget.minWords) {
+    const underBy = budget.minWords - wordCount;
     status = 'under';
     message = `${underBy} word${underBy > 1 ? 's' : ''} SHORT — add more content`;
     color = 'text-amber-600';
@@ -221,28 +220,24 @@ export function buildWordBudgetPromptRules(): string {
   return `
 VOICE & WORD BUDGET RULES (MANDATORY — STRICTLY ENFORCE):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Formula: usable_seconds = clip_duration × (1 - breath_overhead)
-         max_words = usable_seconds × (WPM ÷ 60)
-         safe_range = 75%–100% of max_words
+TARGET PACING: 2 TO 4 MEANINGFUL WORDS PER SECOND.
+- MINIMUM: 2 words/sec (Strict)
+- MAXIMUM: 4 words/sec (Absolute Limit)
 
-Scene-Type Presets:
-  • Hook clip (4–6s): WPM=165, breath=25% → 8–13 words, emotion=[excited] or [urgent]
-  • Body clip (7–10s): WPM=150, breath=30% → 17–28 words, emotion=[confident] or [dramatic]
-  • CTA close (12–15s): WPM=130, breath=35% → 26–38 words, emotion=[calm] or [warm]
+WORD COUNTING RULE:
+- Do NOT count words with only 1 or 2 letters (e.g., "a", "is", "to", "in", "it"). 
+- ONLY count "Meaningful Words" (words with 3+ characters).
 
-Quick Reference Table:
-  4s → 8–10 words  |  5s → 9–13 words  |  6s → 11–15 words
-  7s → 13–17 words  |  8s → 14–19 words  |  9s → 16–21 words
-  10s → 17–23 words |  12s → 20–27 words |  15s → 26–35 words
+Meaningful Word Budget Table:
+  4s → 8-16 words |  5s → 10-20 words |  6s → 12-24 words
+  7s → 14-28 words |  8s → 16-32 words |  9s → 18-36 words
+  10s → 20-40 words | 12s → 24-48 words | 15s → 30-60 words
 
 RULES:
 1. EVERY narration field MUST start with an emotion tag: [excited], [dramatic], [calm], [urgent], [whisper], [confident], [angry], [sad], [terrified], [happy], [warm]
-2. The narration word count MUST fall within the safe_range for the scene's duration_seconds
-3. Scene 1 (Hook) MUST use high-energy emotion ([excited] or [urgent]) with tight word count
-4. Final scene (CTA) MUST use [calm] or [warm] emotion with breathing room
-5. Sound effects (sound field) MUST be specific Foley — NOT generic. Example: "Heavy metallic clang reverberating in empty warehouse" NOT "impact sound"
-6. Music (music field) MUST specify: genre, BPM range, instrument focus, and energy level. Example: "Dark trap beat, 75 BPM, 808 sub-bass, tension building" NOT "dramatic music"
-7. Each scene MUST have a DIFFERENT emotion tag — never repeat the same emotion consecutively
+2. The number of Meaningful Words MUST NOT exceed the budget listed above for the scene's duration_seconds.
+3. If a scene is 10 seconds, it MUST have EXACTLY or slightly FEWER than 20 meaningful words.
+4. Each scene MUST have a DIFFERENT emotion tag — never repeat the same emotion consecutively.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 }
 

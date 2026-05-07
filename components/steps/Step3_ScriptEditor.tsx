@@ -77,12 +77,21 @@ export function Step3_ScriptEditor() {
         >
           Back
         </button>
-        <button
-          onClick={() => setStep(4)}
-          className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold shadow-sm hover:bg-indigo-700 transition-colors"
-        >
-          Approve Script & Continue
-        </button>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <button
+            onClick={() => setStep(4)}
+            className="w-full sm:w-auto px-6 py-3 bg-white text-indigo-600 rounded-lg font-semibold border border-indigo-200 shadow-sm hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+          >
+            Detailed Storyboard (Pro)
+          </button>
+          <button
+            onClick={() => setStep(5)}
+            className="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white rounded-lg font-bold shadow-md hover:bg-indigo-700 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+          >
+            Quick Media Generation
+            <span className="text-xs bg-indigo-500 text-white px-2 py-0.5 rounded-full font-medium">Skip Step 4</span>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -400,16 +400,18 @@ export function VideoPromptEditor({ scene, onUpdate, sceneIndex = 0, totalScenes
               className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
             />
           </div>
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Call To Action Cue</label>
-            <input
-              type="text"
-              value={scene.call_to_action_cue || ''}
-              onChange={(e) => onUpdate({ call_to_action_cue: e.target.value })}
-              placeholder="e.g. Subscribe button pop-up, Point down gesture"
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
-            />
-          </div>
+          {sceneIndex === totalScenes - 1 && (
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Call To Action Cue</label>
+              <input
+                type="text"
+                value={scene.call_to_action_cue || ''}
+                onChange={(e) => onUpdate({ call_to_action_cue: e.target.value })}
+                placeholder="e.g. Subscribe button pop-up, Point down gesture"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

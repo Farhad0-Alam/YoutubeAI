@@ -17,13 +17,14 @@ interface VideoState {
   updateScene: (sceneIndex: number, data: any) => void;
   setVoices: (voices: Voice[]) => void;
   setAudioFiles: (files: any[]) => void;
+  resetProject: () => void;
 }
 
 export const useVideoStore = create<VideoState>()(
   persist(
     (set) => ({
-      currentStep: 1,
-      highestStep: 1,
+      currentStep: 0,
+      highestStep: 0,
       project: null,
       scriptData: null,
       generatedIdeas: null,
@@ -44,6 +45,14 @@ export const useVideoStore = create<VideoState>()(
       }),
       setVoices: (voices) => set({ voices }),
       setAudioFiles: (files) => set({ audioFiles: files }),
+      resetProject: () => set({
+        currentStep: 1,
+        highestStep: 1,
+        project: null,
+        scriptData: null,
+        generatedIdeas: null,
+        audioFiles: []
+      }),
     }),
     {
       name: 'youtubeai-storage', // name of the item in the storage (must be unique)

@@ -15,6 +15,7 @@ export function useVideoGeneration() {
       const data = await api.generateHooksAndTitles(params);
       
       const projectData = {
+        title: params.project_name || params.topic,
         niche_id: params.niche_id,
         topic: params.topic,
         script_style: params.script_style,
@@ -55,7 +56,7 @@ export function useVideoGeneration() {
       setScriptData(data);
       
       const projectData = {
-        title: data.title,
+        title: params.project_name || data.title,
         niche_id: params.niche_id,
         topic: params.topic,
         script_style: params.script_style,

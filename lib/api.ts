@@ -608,8 +608,29 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
     const seed = Math.floor(Math.random() * 99999);
     const p = encodeURIComponent(promptParams);
     return {
-      thumbnail_url: `https://image.pollinations.ai/prompt/${p}?width=1280&height=720&nologo=true&seed=${seed}`
-    };
+       thumbnail_url: `https://image.pollinations.ai/prompt/${p}?width=1280&height=720&nologo=true&seed=${seed}`
+     };
+  },
+
+  async generateThumbnailPrompts(data: { title: string, niche_id: string, script_summary?: string, llm_model?: string }) {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    try {
+      const response = await fetch(`${backendUrl}/api/thumbnail/prompts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: data.title,
+          niche_id: data.niche_id,
+          script_summary: data.script_summary || "",
+          llm_model: data.llm_model || "gemini"
+        })
+      });
+      if (!response.ok) throw new Error("Failed to generate thumbnail prompts");
+      return await response.json();
+    } catch (e) {
+      console.error("Thumbnail Prompts Generation Error:", e);
+      throw e;
+    }
   },
 
   async generateImage(data: { prompt: string }) {

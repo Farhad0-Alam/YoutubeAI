@@ -13,6 +13,9 @@ export function Step7_ThumbnailStudio() {
     prompt, setPrompt,
     thumbnailUrl,
     isGenerating,
+    generatedPrompts,
+    isBrainstormingPrompts,
+    handleBrainstormPrompts,
     fontFamily, setFontFamily,
     filter, setFilter,
     textY, setTextY,
@@ -36,6 +39,7 @@ export function Step7_ThumbnailStudio() {
         <div className="lg:col-span-5 space-y-6">
           <StoryboardContextPicker 
             availableImagePrompts={availableImagePrompts}
+            generatedPrompts={generatedPrompts}
             availableTexts={availableTexts}
             currentPrompt={prompt}
             onSelectPrompt={setPrompt}
@@ -53,6 +57,8 @@ export function Step7_ThumbnailStudio() {
             textAlign={textAlign} setTextAlign={setTextAlign}
             onGenerate={handleGenerate}
             isGenerating={isGenerating}
+            onBrainstorm={handleBrainstormPrompts}
+            isBrainstorming={isBrainstormingPrompts}
           />
         </div>
 

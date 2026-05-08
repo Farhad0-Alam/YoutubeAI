@@ -42,6 +42,28 @@ export function useThumbnailStudioLogic() {
   const [textY, setTextY] = useState(50);
   const [textColor, setTextColor] = useState('#ffffff');
   const [textAlign, setTextAlign] = useState<'left'|'center'|'right'>('center');
+  const [isBrainstormingPrompts, setIsBrainstormingPrompts] = useState(false);
+  const [generatedPrompts, setGeneratedPrompts] = useState<{label: string, prompt: string}[]>([]);
+
+  const handleBrainstormPrompts = async () => {
+    if (!scriptData || !project) return;
+    setIsBrainstormingPrompts(true);
+    try {
+      const res = await api.generateThumbnailPrompts({
+        title: title || scriptData.title,
+        niche_id: scriptData.niche_id,
+        llm_model: 'gemini'
+      });
+      if (res.prompts) {
+        setGeneratedPrompts(res.prompts);
+        toast.success('Generated 3 viral thumbnail prompts!');
+      }
+    } catch (e) {
+      toast.error('Failed to brainstorm prompts');
+    } finally {
+      setIsBrainstormingPrompts(false);
+    }
+  };
 
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +108,9 @@ export function useThumbnailStudioLogic() {
     prompt, setPrompt,
     thumbnailUrl, setThumbnailUrl,
     isGenerating,
+    generatedPrompts,
+    isBrainstormingPrompts,
+    handleBrainstormPrompts,
     fontFamily, setFontFamily,
     filter, setFilter,
     textY, setTextY,

@@ -2,6 +2,7 @@ import React from 'react';
 
 interface StoryboardContextPickerProps {
   availableImagePrompts: { label: string, prompt: string }[];
+  generatedPrompts?: { label: string, prompt: string }[];
   availableTexts: string[];
   currentPrompt: string;
   onSelectPrompt: (p: string) => void;
@@ -10,6 +11,7 @@ interface StoryboardContextPickerProps {
 
 export function StoryboardContextPicker({
   availableImagePrompts,
+  generatedPrompts = [],
   availableTexts,
   currentPrompt,
   onSelectPrompt,
@@ -27,6 +29,23 @@ export function StoryboardContextPicker({
                 key={idx}
                 onClick={() => onSelectPrompt(p.prompt)}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors border ${currentPrompt === p.prompt ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm' : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'}`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {generatedPrompts.length > 0 && (
+        <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
+          <label className="block text-xs font-bold text-amber-800 mb-2 uppercase tracking-wider">AI Suggested Prompts</label>
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-amber-200">
+            {generatedPrompts.map((p, idx) => (
+              <button
+                key={idx}
+                onClick={() => onSelectPrompt(p.prompt)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors border ${currentPrompt === p.prompt ? 'bg-amber-600 text-white border-amber-700 shadow-sm' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50'}`}
               >
                 {p.label}
               </button>

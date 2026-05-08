@@ -20,6 +20,8 @@ interface ThumbnailControlsProps {
   setTextAlign: (val: 'left' | 'center' | 'right') => void;
   onGenerate: () => void;
   isGenerating: boolean;
+  onBrainstorm?: () => void;
+  isBrainstorming?: boolean;
 }
 
 export function ThumbnailControls({
@@ -32,12 +34,23 @@ export function ThumbnailControls({
   textColor, setTextColor,
   textAlign, setTextAlign,
   onGenerate,
-  isGenerating
+  isGenerating,
+  onBrainstorm,
+  isBrainstorming = false
 }: ThumbnailControlsProps) {
   return (
     <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-6 space-y-5">
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Art Direction Prompt</label>
+        <div className="flex justify-between items-center mb-2">
+          <label className="block text-sm font-semibold text-gray-700">Art Direction Prompt</label>
+          <button 
+            onClick={onBrainstorm}
+            disabled={isBrainstorming}
+            className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200 hover:bg-amber-100 transition-colors flex items-center gap-1"
+          >
+            {isBrainstorming ? <Loader2 className="w-3 h-3 animate-spin" /> : '✨ Brainstorm Viral Prompt'}
+          </button>
+        </div>
         <textarea 
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}

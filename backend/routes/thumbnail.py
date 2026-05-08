@@ -26,3 +26,22 @@ async def create_thumbnail(req: ThumbnailRequest):
     )
     
     return {"thumbnail_path": final_path, "thumbnail_url": f"/outputs/thumbnails/{req.project_id}.png"}
+ 
+from backend.services.ai_service import generate_thumbnail_prompts
+
+class ThumbnailPromptRequest(BaseModel):
+    title: str
+    niche_id: str
+    script_summary: str = ""
+    llm_model: str = "gemini"
+
+@router.post("/thumbnail/prompts")
+async def create_thumbnail_prompts(req: ThumbnailPromptRequest):
+    niche_config = next((n for n in NICHE_CONFIGS if n["niche_id"] == req.niche_id), {})
+    result = await generate_thumbnail_prompts(
+        niche_config=niche_config,
+        title=req.title,
+        script_summary=req.script_summary,
+        llm_model=req.llm_model
+    )
+    return result

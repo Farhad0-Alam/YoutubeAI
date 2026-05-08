@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { api } from '../lib/api';
 import { useVideoStore } from '../store/videoStore';
+import { useHistoryStore } from '../store/historyStore';
 import { toast } from 'sonner';
 
 export function useVideoGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
   const { setScriptData, setStep, setProject } = useVideoStore();
+  const saveToHistory = useHistoryStore(state => state.saveProject);
 
   const [isGeneratingHooks, setIsGeneratingHooks] = useState(false);
 
@@ -74,7 +76,11 @@ export function useVideoGeneration() {
         },
       };
       const proj = await api.createProject(projectData);
-      setProject({ ...projectData, _id: proj._id } as any);
+      const finalProject = { ...projectData, _id: proj._id } as any;
+      setProject(finalProject);
+      
+      // Save to history as a "Recent Prompt" / Successful project
+      saveToHistory(finalProject, data);
       
       setStep(3);
       toast.success('Script generated successfully!');

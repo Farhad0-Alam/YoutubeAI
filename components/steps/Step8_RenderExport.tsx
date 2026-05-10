@@ -10,6 +10,10 @@ export function Step8_RenderExport() {
     voices,
     selectedVoice,
     setSelectedVoice,
+    grokMode,
+    setGrokMode,
+    pipelineStage,
+    grokProgress,
     isPrepping,
     renderComplete,
     showEditor,
@@ -29,12 +33,14 @@ export function Step8_RenderExport() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Export Video</h1>
-        <p className="text-gray-500 mb-6">Preview your fully stitched video sequence directly in the browser.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Generate & Export</h1>
+        <p className="text-gray-500 mb-6">
+          Generate your AI voiceover and Grok video clips, then assemble into a final production video.
+        </p>
       </div>
 
       {renderComplete && scriptData ? (
-        <FinalVideoDashboard 
+        <FinalVideoDashboard
           scenes={scriptData.scenes}
           isExporting={isExporting}
           onExport={handleExportVideo}
@@ -48,13 +54,17 @@ export function Step8_RenderExport() {
           onContinue={() => setStep(9)}
         />
       ) : (
-        <RenderSettingsView 
+        <RenderSettingsView
           voices={voices}
           selectedVoice={selectedVoice}
           setSelectedVoice={setSelectedVoice}
+          grokMode={grokMode}
+          setGrokMode={setGrokMode}
+          pipelineStage={pipelineStage}
+          grokProgress={grokProgress}
           isPrepping={isPrepping}
           onStartRender={startLocalRender}
-          onBack={() => setStep(7)}
+          onBack={() => setStep(4)}
         />
       )}
 

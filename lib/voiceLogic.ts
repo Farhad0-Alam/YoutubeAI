@@ -95,8 +95,8 @@ export function detectSceneType(sceneIndex: number, totalScenes: number): SceneT
 export function getPresetForSceneType(sceneType: SceneType): VoicePreset {
   switch (sceneType) {
     case 'hook': return VOICE_PRESETS.find(p => p.id === 'energetic_hook')!;
-    case 'cta':  return VOICE_PRESETS.find(p => p.id === 'calm_narrator')!;
-    default:     return VOICE_PRESETS.find(p => p.id === 'confident_presenter')!;
+    case 'cta': return VOICE_PRESETS.find(p => p.id === 'calm_narrator')!;
+    default: return VOICE_PRESETS.find(p => p.id === 'confident_presenter')!;
   }
 }
 
@@ -105,7 +105,9 @@ export interface WordBudget {
   clipDuration: number;
   usableSeconds: number;
   wordsPerSec: number;
+  minWords: number;
   maxWords: number;
+  exactTarget: number;
   safeMin: number;
   safeMax: number;
   sceneType: SceneType;
@@ -131,17 +133,20 @@ export function calculateWordBudget(
     ? VOICE_PRESETS.find(p => p.id === overridePreset)!
     : getPresetForSceneType(sceneType);
 
-  const wordsPerSec = 2; // Target: At least 2 meaningful words per second
-  const minWords = Math.round(clipDuration * wordsPerSec);
-  const maxWords = Math.round(clipDuration * 4); // ABSOLUTE MAX: 4 meaningful words per second
+  // Exact target = duration * 2.25, rounded (the 'secret sauce')
+  const exactTarget = Math.round(clipDuration * 2.25);
+  const minWords = Math.round(clipDuration * 2.0);   // floor: 2 w/s
+  const maxWords = Math.round(clipDuration * 2.5);   // ceiling: 2.5 w/s
 
   return {
     clipDuration,
     usableSeconds: clipDuration,
-    wordsPerSec,
+    wordsPerSec: 2.25,
     minWords,
     maxWords,
+    safeMin: minWords,
     safeMax: maxWords,
+    exactTarget,
     sceneType,
     preset
   };
@@ -168,7 +173,7 @@ export function validateNarration(
   // Strip emotion tags like [dramatic] before counting
   const cleanText = (narrationText || '').replace(/\[.*?\]/g, '').trim();
   const wordCount = cleanText.length > 0
-    ? cleanText.split(/\s+/).filter(w => w.length > 2).length
+    ? cleanText.split(/\s+/).filter(w => w.length > 0).length
     : 0;
 
   const budget = calculateWordBudget(clipDuration, sceneIndex, totalScenes);
@@ -180,13 +185,13 @@ export function validateNarration(
 
   if (wordCount === 0) {
     status = 'empty';
-    message = `Need ${budget.minWords}–${budget.maxWords} meaningful words`;
+    message = `Need ~${budget.exactTarget} words (${budget.clipDuration}s × 2.25)`;
     color = 'text-gray-400';
     bgColor = 'bg-gray-50';
   } else if (wordCount > budget.safeMax) {
     const overBy = wordCount - budget.safeMax;
     status = 'over';
-    message = `${overBy} word${overBy > 1 ? 's' : ''} OVER — max is ${budget.maxWords} (4 w/s)`;
+    message = `${overBy} word${overBy > 1 ? 's' : ''} OVER — max is ${budget.maxWords} (2.5 w/s)`;
     color = 'text-red-600';
     bgColor = 'bg-red-50';
   } else if (wordCount < budget.minWords) {
@@ -218,26 +223,24 @@ export function validateNarration(
  */
 export function buildWordBudgetPromptRules(): string {
   return `
-VOICE & WORD BUDGET RULES (MANDATORY — STRICTLY ENFORCE):
+VOICE & WORD BUDGET RULES (MANDATORY — EXACT PACING ONLY):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TARGET PACING: 2 TO 4 MEANINGFUL WORDS PER SECOND.
-- MINIMUM: 2 words/sec (Strict)
-- MAXIMUM: 4 words/sec (Absolute Limit)
+TARGET PACING: 2.25 WORDS PER SECOND (STRICT).
 
 WORD COUNTING RULE:
-- Do NOT count words with only 1 or 2 letters (e.g., "a", "is", "to", "in", "it"). 
-- ONLY count "Meaningful Words" (words with 3+ characters).
+- Count EVERY single word (all lengths).
 
-Meaningful Word Budget Table:
-  4s → 8-16 words |  5s → 10-20 words |  6s → 12-24 words
-  7s → 14-28 words |  8s → 16-32 words |  9s → 18-36 words
-  10s → 20-40 words | 12s → 24-48 words | 15s → 30-60 words
+Word Budget Table:
+  4s → EXACTLY 9 | 5s → EXACTLY 11 | 6s → EXACTLY 14
+  7s → EXACTLY 16 | 8s → EXACTLY 18 | 9s → EXACTLY 20
+  10s → EXACTLY 23 | 11s → EXACTLY 25 | 12s → EXACTLY 27
+  13s → EXACTLY 29 | 14s → EXACTLY 32 | 15s → EXACTLY 34
+  20s → EXACTLY 45 | 30s → EXACTLY 68
 
 RULES:
-1. EVERY narration field MUST start with an emotion tag: [excited], [dramatic], [calm], [urgent], [whisper], [confident], [angry], [sad], [terrified], [happy], [warm]
-2. The number of Meaningful Words MUST NOT exceed the budget listed above for the scene's duration_seconds.
-3. If a scene is 10 seconds, it MUST have EXACTLY or slightly FEWER than 20 meaningful words.
-4. Each scene MUST have a DIFFERENT emotion tag — never repeat the same emotion consecutively.
+1. You MUST hit the "EXACTLY X words" target for every scene.
+2. Count the words for every scene. If it doesn't match the target, rewrite it.
+3. This ensures "Perfect Pacing" across the entire video.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 }
 

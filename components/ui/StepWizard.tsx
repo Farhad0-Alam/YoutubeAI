@@ -14,7 +14,7 @@ export function StepWizard() {
     "Storyboard",
     "Media Dashboard",
     "Brand Kit",
-    "Thumbnail",
+    "Thumbnail Studio",
     "Render",
     "Publish & Schedule"
   ];
@@ -43,7 +43,10 @@ export function StepWizard() {
           />
 
           {steps.map((step, idx) => {
-            const stepNum = idx + 1;
+            const displayStepNum = idx + 1;
+            // Map display step to internal step number
+            let stepNum = displayStepNum;
+
             const isCompleted = stepNum < currentStep;
             const isCurrent = stepNum === currentStep;
             const isClickable = stepNum <= highestStep && !isCurrent;
@@ -63,7 +66,7 @@ export function StepWizard() {
                     : 'bg-gray-100 text-gray-400'
                   }`}
                 >
-                  {isCompleted ? <Check className="w-4 h-4" /> : stepNum}
+                  {isCompleted ? <Check className="w-4 h-4" /> : displayStepNum}
                 </div>
                 <span className={`text-[10px] font-bold uppercase tracking-tighter ${isCurrent ? 'text-indigo-900' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>
                   {step}

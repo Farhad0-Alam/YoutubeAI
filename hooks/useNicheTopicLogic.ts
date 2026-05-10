@@ -25,6 +25,7 @@ export function useNicheTopicLogic() {
   const [voiceGender, setVoiceGender] = useState(existingProject?.voice || 'Male');
   const [topic, setTopic] = useState(existingProject?.topic || '');
   const [projectName, setProjectName] = useState(existingProject?.title || '');
+  const [grokMode, setGrokMode] = useState(existingProject?.settings?.grok_mode ?? true);
 
   const { isGeneratingHooks, generateHooks } = useVideoGeneration();
   const setGeneratedIdeas = useVideoStore(s => s.setGeneratedIdeas);
@@ -61,7 +62,8 @@ export function useNicheTopicLogic() {
         ollama_url: ollamaUrl,
         ollama_model: ollamaModel,
         visual_style: selectedStyle,
-        project_name: projectName
+        project_name: projectName,
+        grok_mode: grokMode
       } as any);
       setGeneratedIdeas(ideas);
       setStep(2);
@@ -90,7 +92,8 @@ export function useNicheTopicLogic() {
         ollama_model: ollamaModel,
         visual_style: selectedStyle,
         extra_instructions: "",
-        audio_engine: audioEngine
+        audio_engine: audioEngine,
+        grok_mode: grokMode
       } as any);
       // generateScript already sets step 3 and script data
     } catch (e) {
@@ -151,7 +154,8 @@ export function useNicheTopicLogic() {
         llm_model: llmModel,
         ollama_url: ollamaUrl,
         ollama_model: ollamaModel,
-        audio_engine: audioEngine
+        audio_engine: audioEngine,
+        grok_mode: grokMode
       },
     };
     
@@ -194,6 +198,8 @@ export function useNicheTopicLogic() {
     setVoiceGender,
     projectName,
     setProjectName,
+    grokMode,
+    setGrokMode,
     isGeneratingHooks,
     handleSelectNiche,
     handleGenerateIdeas,

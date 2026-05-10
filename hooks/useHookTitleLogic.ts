@@ -50,7 +50,8 @@ export function useHookTitleLogic() {
       aspect_ratio: project.aspect_ratio || '16:9',
       llm_model: project.settings?.llm_model,
       ollama_url: project.settings?.ollama_url,
-      ollama_model: project.settings?.ollama_model
+      ollama_model: project.settings?.ollama_model,
+      grok_mode: project.settings?.grok_mode
     } as any);
 
     if (newIdeas && newIdeas.length > 0) {
@@ -71,7 +72,8 @@ export function useHookTitleLogic() {
         topic: `Topic: ${project.topic}. The user has chosen a specific title: "${customTitle}". Please generate 1-3 ideas where the 'title' matches the user's title EXACTLY, and the 'hook' is a perfectly matched first 5 seconds script for this title.`,
         llm_model: project.settings?.llm_model,
         ollama_url: project.settings?.ollama_url,
-        ollama_model: project.settings?.ollama_model
+        ollama_model: project.settings?.ollama_model,
+        grok_mode: project.settings?.grok_mode
       });
       if (data && data.ideas && data.ideas.length > 0) {
         setCustomHook(data.ideas[0].hook);
@@ -112,7 +114,8 @@ export function useHookTitleLogic() {
       ai_model: project.ai_model || 'veo3.1',
       llm_model: project.settings?.llm_model,
       ollama_url: project.settings?.ollama_url,
-      ollama_model: project.settings?.ollama_model
+      ollama_model: project.settings?.ollama_model,
+      grok_mode: project.settings?.grok_mode
     };
 
     console.log('🔍 [Step2 → Backend] Writing script with params:', {
@@ -139,7 +142,8 @@ export function useHookTitleLogic() {
       aspect_ratio: project.aspect_ratio || '16:9',
       llm_model: project.settings?.llm_model,
       ollama_url: project.settings?.ollama_url,
-      ollama_model: project.settings?.ollama_model
+      ollama_model: project.settings?.ollama_model,
+      grok_mode: project.settings?.grok_mode
     } as any);
     if (newIdeas && newIdeas.length > 0) {
       setGeneratedIdeas([...(generatedIdeas || []), ...newIdeas]);

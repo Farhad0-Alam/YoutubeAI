@@ -18,19 +18,27 @@ export function Step6_BrandKit() {
 
       <BrandKitPremiumLock onUpgrade={handleUpgrade} />
 
-      <div className="p-6 border-t border-gray-200 flex justify-between items-center bg-gray-50/50">
+      <div className="p-6 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50/50">
         <button 
           onClick={() => setStep(5)}
-          className="px-6 py-3 bg-white text-gray-700 rounded-lg font-semibold border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors"
+          className="w-full sm:w-auto px-6 py-3 bg-white text-gray-700 rounded-lg font-semibold border border-gray-300 shadow-sm hover:bg-gray-50 transition-colors"
         >
           Back to Media
         </button>
-        <button 
-          onClick={() => setStep(7)}
-          className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold transition-colors hover:bg-indigo-700 shadow-sm flex items-center gap-2"
-        >
-          Skip to Thumbnail <PlaySquare className="w-4 h-4" />
-        </button>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <button 
+            onClick={() => setStep(8)}
+            className="px-6 py-3 bg-gray-100 text-gray-500 rounded-lg font-bold border border-gray-300 hover:bg-gray-200 transition-colors"
+          >
+            Skip to Render
+          </button>
+          <button 
+            onClick={() => setStep(7)}
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold transition-colors hover:bg-indigo-700 shadow-sm flex items-center justify-center gap-2"
+          >
+            Skip to Thumbnail <PlaySquare className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -32,6 +32,7 @@ export function useVideoGeneration() {
           llm_model: params.llm_model,
           ollama_url: params.ollama_url,
           ollama_model: params.ollama_model,
+          grok_mode: params.grok_mode,
         },
       };
       
@@ -54,6 +55,7 @@ export function useVideoGeneration() {
         ...params,
         ai_model: params.ai_model,
         aspect_ratio: params.aspect_ratio,
+        grok_mode: params.grok_mode,
       });
       setScriptData(data);
       
@@ -73,6 +75,7 @@ export function useVideoGeneration() {
           llm_model: params.llm_model,
           ollama_url: params.ollama_url,
           ollama_model: params.ollama_model,
+          grok_mode: params.grok_mode,
         },
       };
       const proj = await api.createProject(projectData);

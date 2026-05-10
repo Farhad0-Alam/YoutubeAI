@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from backend.database.postgres import init_db, close_db
 from backend.config.settings import settings
-from backend.routes import script, media, tts, thumbnail, render, projects, videos
+from backend.routes import script, media, tts, thumbnail, render, projects, videos, grok_video
 import os
 
 app = FastAPI(title="YouTube Faceless Video Maker API")
@@ -37,6 +37,7 @@ app.include_router(thumbnail.router, prefix="/api")
 app.include_router(render.router, prefix="/api")
 app.include_router(projects.router, prefix="/api")
 app.include_router(videos.router, prefix="/api")
+app.include_router(grok_video.router, prefix="/api")
 
 # Serve generated files statically
 app.mount("/outputs", StaticFiles(directory=settings.OUTPUT_DIR), name="outputs")

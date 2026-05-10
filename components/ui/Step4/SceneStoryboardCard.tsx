@@ -11,6 +11,7 @@ interface SceneStoryboardCardProps {
   generatingScene: number | null;
   generatingAll: boolean;
   onGenerateSubScenes: (index: number) => void;
+  onGenerateImage: (sceneIdx: number, subIdx: number) => void;
   onSubSceneUpdate: (sceneIdx: number, subIdx: number, field: string, value: string) => void;
   onCopy: (text: string, id: string) => void;
   copiedId: string | null;
@@ -32,6 +33,7 @@ export function SceneStoryboardCard({
   generatingScene,
   generatingAll,
   onGenerateSubScenes,
+  onGenerateImage,
   onSubSceneUpdate,
   onCopy,
   copiedId,
@@ -111,6 +113,7 @@ export function SceneStoryboardCard({
                 isGeneratingPrompts={generatingScene === index}
                 onUpdate={(field, value) => onSubSceneUpdate(index, subIdx, field, value)}
                 onGeneratePrompts={() => onGenerateSubScenes(index)}
+                onGenerateImage={() => onGenerateImage(index, subIdx)}
                 onCopy={onCopy}
                 copiedId={copiedId}
                 voiceEnabled={voiceToggles[`${index}-${subIdx}`] ?? true}

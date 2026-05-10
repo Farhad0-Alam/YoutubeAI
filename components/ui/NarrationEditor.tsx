@@ -83,20 +83,17 @@ SCENE CONTEXT:
 - Scene Duration: ${clipDuration} seconds
 
 WORD BUDGET (STRICTLY ENFORCE):
-- MINIMUM: ${budget.minWords} meaningful words (3+ characters each)
-- TARGET: ${budget.minWords + 5} words
+- MINIMUM: ${budget.minWords} words
+- TARGET: ${budget.minWords + 2} words
 - Voice preset: ${preset.label} (${preset.wpm} WPM)
-- Required emotion: ${preset.emotion}
 
 RULES:
-1. Start with emotion tag: [${preset.emotion}]
-2. Every scene MUST have AT LEAST ${budget.minWords} meaningful words.
-3. Meaningful words = words with 3 or more characters. Do NOT count "a", "is", "to", "of", etc.
-4. ${sceneType === 'hook' ? 'Make it attention-grabbing, high-energy, create instant curiosity' : sceneType === 'cta' ? 'Make it warm, inviting, with a clear call to action (subscribe, like, comment)' : 'Make it informative, engaging, building on the topic with vivid language'}
-4. Sound natural and human — avoid robotic or generic phrasing
-5. Match the visual context provided
+1. Every scene MUST have AT LEAST ${budget.minWords} words.
+2. ${sceneType === 'hook' ? 'Make it attention-grabbing, high-energy, create instant curiosity' : sceneType === 'cta' ? 'Make it warm, inviting, with a clear call to action (subscribe, like, comment)' : 'Make it informative, engaging, building on the topic with vivid language'}
+3. Sound natural and human — avoid robotic or generic phrasing
+4. Match the visual context provided
 
-Return ONLY the narration text. No explanation. No quotes around it. Just the narration starting with the emotion tag.`;
+Return ONLY the narration text. No explanation. No quotes around it. No emotion tags in brackets.`;
 
       const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
       if (!apiKey) {
@@ -118,10 +115,8 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
         narration = narration.slice(1, -1);
       }
 
-      // Ensure emotion tag is present
-      if (!narration.startsWith('[')) {
-        narration = `[${preset.emotion}] ${narration}`;
-      }
+      // Ensure no brackets (emotions) are in narration
+      narration = narration.replace(/\[.*?\]/g, '').trim();
 
       onChange(narration);
     } catch (err: any) {
@@ -142,10 +137,9 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
     validation = validateNarration(value || '', clipDuration, sceneIndex, totalScenes);
   }
 
-  // Meaningful word count (3+ letters)
+  // Word count (all words)
   const cleanText = (value || '').replace(/\[.*?\]/g, '').trim();
-  const wordCount = cleanText.length > 0 ? cleanText.split(/\s+/).filter(w => w.length > 2).length : 0;
-  const rawWordCount = cleanText.length > 0 ? cleanText.split(/\s+/).filter(w => w.length > 0).length : 0;
+  const wordCount = cleanText.length > 0 ? cleanText.split(/\s+/).filter(w => w.length > 0).length : 0;
 
   // Detect current emotion tag
   const emotionMatch = (value || '').match(/^\[([^\]]+)\]/);
@@ -177,12 +171,6 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
             {isGenerating ? 'Generating...' : 'AI Narration'}
           </button>
 
-          {/* Current emotion badge (if present) */}
-          {currentEmotion && (
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-600 px-2 py-1 rounded-full border border-orange-200">
-              {currentEmotion}
-            </span>
-          )}
 
           <button
             onClick={handleCopy}
@@ -214,7 +202,7 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
             />
           </div>
           <span className="text-[10px] font-bold font-mono shrink-0">
-            {wordCount}/{validation.budget?.minWords} min meaningful words
+            {wordCount}/{Math.round(clipDuration * 2.25)} target words
           </span>
           <span className="text-[9px] font-semibold shrink-0">
             {validation.status === 'perfect' ? '✅' : validation.status === 'over' ? '🔴' : validation.status === 'under' ? '🟠' : validation.status === 'tight' ? '🟡' : ''}
@@ -224,7 +212,7 @@ Return ONLY the narration text. No explanation. No quotes around it. Just the na
       ) : (
         value && (
           <div className="absolute bottom-3 right-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest pointer-events-none">
-            {wordCount} meaningful words
+            {wordCount} words
           </div>
         )
       )}

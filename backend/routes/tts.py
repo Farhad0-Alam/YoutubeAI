@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
-from backend.services.tts_service import generate_speech
 
 router = APIRouter()
 
@@ -15,8 +14,9 @@ class TTSRequest(BaseModel):
 
 @router.post("/tts")
 async def generate_tts(req: TTSRequest):
+    from backend.services.tts_service import generate_speech
     results = []
-    
+
     for scene in req.scenes:
         try:
             result = await generate_speech(scene.narration, req.voice, scene.scene_number)
@@ -24,7 +24,7 @@ async def generate_tts(req: TTSRequest):
         except Exception as e:
             print(f"TTS Error for scene {scene.scene_number}: {e}")
             raise HTTPException(status_code=500, detail=str(e))
-            
+
     return {"audio_files": results}
 
 @router.get("/voices")

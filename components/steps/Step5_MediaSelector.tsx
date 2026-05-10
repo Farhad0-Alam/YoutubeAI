@@ -71,9 +71,14 @@ export function Step5_MediaSelector() {
               >
                 {scriptData.scenes.some(s => s.sub_scenes && s.sub_scenes.length > 0) ? 'Back to Storyboard' : 'Back to Script'}
               </button>
-              <button onClick={() => setStep(6)} className="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-sm hover:bg-indigo-700 transition-colors">
-                Continue to Brand Kit
-              </button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button onClick={() => setStep(8)} className="w-full sm:w-auto px-6 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold border border-gray-300 hover:bg-gray-200 transition-colors">
+                  Skip to Render
+                </button>
+                <button onClick={() => setStep(6)} className="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-sm hover:bg-indigo-700 transition-colors">
+                  Continue to Brand Kit
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -36,10 +36,10 @@ export function Step1_NicheTopic() {
     setTopic,
     voiceGender,
     setVoiceGender,
-    audioEngine,
-    setAudioEngine,
     projectName,
     setProjectName,
+    grokMode,
+    setGrokMode,
     isGeneratingHooks,
     handleSelectNiche,
     handleGenerateIdeas,
@@ -134,7 +134,7 @@ export function Step1_NicheTopic() {
           ollamaModel={ollamaModel} setOllamaModel={setOllamaModel}
           customScript={customScript} setCustomScript={setCustomScript}
           voiceGender={voiceGender} setVoiceGender={setVoiceGender}
-          audioEngine={audioEngine} setAudioEngine={setAudioEngine}
+          grokMode={grokMode} setGrokMode={setGrokMode}
         />
       </div>
 

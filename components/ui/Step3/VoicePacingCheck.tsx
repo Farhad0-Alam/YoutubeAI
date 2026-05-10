@@ -79,7 +79,7 @@ export function VoicePacingCheck({ scenes, totalDurationSeconds }: VoicePacingCh
         <div className="border border-gray-100 rounded-lg p-4 bg-gray-50">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Words</div>
           <div className="text-xl font-bold text-gray-800">{totalWords}</div>
-          <div className="text-xs text-gray-500 mt-1">Target: {budget.totalMinWords}–{budget.totalMaxWords}</div>
+          <div className="text-xs text-gray-500 mt-1">Target: {budget.totalMinWords}–{budget.totalMaxWords} words</div>
         </div>
         <div className="border border-gray-100 rounded-lg p-4 bg-gray-50">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Duration</div>
@@ -87,11 +87,9 @@ export function VoicePacingCheck({ scenes, totalDurationSeconds }: VoicePacingCh
           <div className="text-xs text-gray-500 mt-1">{totalScenes} scenes</div>
         </div>
         <div className="border border-gray-100 rounded-lg p-4 bg-gray-50">
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Emotion Tags</div>
-          <div className="text-xl font-bold text-gray-800">
-            {validations.filter(v => (v.budget.preset.emotion)).length}/{totalScenes}
-          </div>
-          <div className="text-xs text-gray-500 mt-1">Auto-assigned by AI</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Pacing Target</div>
+          <div className="text-xl font-bold text-gray-800">2.25 w/s</div>
+          <div className="text-xs text-gray-500 mt-1">Every word counts</div>
         </div>
       </div>
 
@@ -117,7 +115,7 @@ export function VoicePacingCheck({ scenes, totalDurationSeconds }: VoicePacingCh
                 {pct > 100 && <div className="absolute right-0 top-0 h-full w-1 bg-red-700 animate-pulse" />}
               </div>
               <span className="text-[10px] font-bold w-20 shrink-0 text-right font-mono">
-                {v.wordCount}/{v.budget.safeMin}–{v.budget.safeMax}
+                {v.wordCount}/{v.budget.exactTarget} target
               </span>
               <span className="text-[9px] w-24 shrink-0 text-right truncate opacity-80">{v.message}</span>
             </div>
@@ -128,7 +126,7 @@ export function VoicePacingCheck({ scenes, totalDurationSeconds }: VoicePacingCh
       {/* Formula Reference */}
       <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
         <div className="text-[9px] font-mono text-gray-500 leading-relaxed">
-          <span className="font-bold text-gray-700">FORMULA:</span> 2 Meaningful Words (3+ chars) per second. Words like "a", "is", "to", "in" are NOT counted.
+          <span className="font-bold text-gray-700">FORMULA:</span> 2.25 words per second. Every word is counted — including short words like "a", "is", "to", "in". Target = duration × 2.25.
         </div>
       </div>
     </div>

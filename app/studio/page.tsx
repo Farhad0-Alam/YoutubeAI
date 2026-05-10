@@ -32,9 +32,7 @@ export default function StudioPage() {
             {currentStep === 2 && <Step2_HookTitle />}
             {currentStep === 3 && <Step3_ScriptEditor />}
             {currentStep === 4 && <Step4_StoryboardPreview />}
-            {currentStep === 5 && <Step5_MediaSelector />}
-            {currentStep === 6 && <Step6_BrandKit />}
-            {currentStep === 7 && <Step7_ThumbnailStudio />}
+            {(currentStep === 5 || currentStep === 6 || currentStep === 7) && <Step8_RenderExport />}
             {currentStep === 8 && <Step8_RenderExport />}
             {currentStep === 9 && <Step9_PublishSchedule />}
           </div>

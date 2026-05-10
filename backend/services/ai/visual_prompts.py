@@ -42,17 +42,14 @@ VISUAL_STORYTELLING_BLOCK = """
 ═══════════════════════════════════════════════════════════════
 VISUAL STORYTELLING RULES (MANDATORY):
 ═══════════════════════════════════════════════════════════════
-1. EVERY image_prompt MUST directly illustrate the narration content — visuals and words tell ONE story
-2. Progressive visual flow across scenes: Establish → Develop → Climax → Resolve
-3. Camera angles MUST vary: Scene 1=wide establishing → Body=medium/close-up → Final=intimate close-up
-4. Lighting MUST evolve with emotional arc: warm→cool→dramatic→soft
-5. Color grading MUST stay consistent but shift subtly with emotion
-6. Character consistency: if a person appears in scene 1, describe them IDENTICALLY in later scenes (age, clothing, hair, skin tone)
-7. NEVER use generic descriptions like "a person" — be SPECIFIC: "A 35-year-old South Asian man in a navy blazer, short black hair, focused expression"
-8. Environment storytelling: backgrounds MUST contain narrative-relevant details (not empty rooms)
-9. Each scene's visual MUST feel like the NEXT frame in a movie — not a random stock photo
-10. image_prompt MUST be 40-80 words of rich cinematic detail
-11. video_prompt MUST specify exact camera motion + subject action + timing
-12. sound field MUST be formatted as an "SFX Engine Prompt" (e.g. "Action: [X], Style: [Y], Acoustic: [Z]")
-13. music field MUST be formatted as a "Suno/Udio Prompt" (e.g. "Genre: [X], BPM: [Y], Mood: [Z], Instruments: [A]")
+1. EVERY image_prompt MUST directly illustrate the narration content — visuals and words tell ONE story.
+2. VISUAL IDENTITY ANCHOR (CRITICAL): To ensure consistency across scenes (especially for Veo 3 models), you MUST define a "Visual Identity Anchor" for the main character or setting. Repeat this exact description in EVERY SINGLE image_prompt and video_prompt.
+3. CHARACTER REPETITION: If a digital actor appears, describe them with identical traits (age, skin tone, eye color, specific clothing brand/color, hairstyle) in every scene. Do NOT let traits drift.
+4. VOICE ACTOR EMBED (MANDATORY FOR EXTERNAL USE): Every image_prompt and video_prompt MUST end with the locked voice actor phrase from the example above. This ensures that when these prompts are used in external tools (Veo 3, Grok, Sora), they generate the same voice actor in every clip.
+5. NO GENERIC SUBJECTS: Never say "a man" or "a city". Say "A 40-year-old Scandinavian architect in a charcoal turtleneck" or "A neon-lit cyberpunk Tokyo alleyway during a light drizzle".
+6. STYLE REFERENCES: Use consistent style descriptors (e.g., "shot on 35mm film, anamorphic lens, high contrast, teal-orange grade") in every scene to prevent subtle visual shifts.
+7. SINGLE-SESSION CONTINUITY: Act as if you are generating this entire project in one continuous shot. Every scene must feel like the immediate next frame of the previous one.
+8. image_prompt MUST be 40-80 words of rich cinematic detail.
+9. video_prompt MUST specify exact camera motion + subject action + timing.
+10. Sound & Music: Format as specific engine prompts (SFX: Action/Style/Acoustic, Music: Genre/BPM/Mood).
 ═══════════════════════════════════════════════════════════════"""

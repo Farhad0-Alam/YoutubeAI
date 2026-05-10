@@ -19,6 +19,8 @@ interface VideoDetailsFormProps {
   setCustomScript: (val: string) => void;
   voiceGender: string;
   setVoiceGender: (val: string) => void;
+  grokMode: boolean;
+  setGrokMode: (val: boolean) => void;
 }
 
 export function VideoDetailsForm({
@@ -30,7 +32,8 @@ export function VideoDetailsForm({
   ollamaUrl, setOllamaUrl,
   ollamaModel, setOllamaModel,
   customScript, setCustomScript,
-  voiceGender, setVoiceGender
+  voiceGender, setVoiceGender,
+  grokMode, setGrokMode
 }: VideoDetailsFormProps) {
 
   const sceneCounts = [
@@ -208,6 +211,36 @@ export function VideoDetailsForm({
           </div>
         </div>
       )}
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">Character Consistency Mode (Grok Optimized)</label>
+        <div 
+          onClick={() => setGrokMode(!grokMode)}
+          className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+            grokMode 
+              ? 'border-indigo-500 bg-indigo-50 shadow-sm' 
+              : 'border-gray-200 bg-white hover:border-gray-300'
+          }`}
+        >
+          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+            grokMode ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-300'
+          }`}>
+            {grokMode && (
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </div>
+          <div>
+            <span className={`text-sm font-bold block ${grokMode ? 'text-indigo-900' : 'text-gray-700'}`}>
+              Skip Image Generation for Consistent Video
+            </span>
+            <span className="text-[10px] text-gray-500 leading-tight">
+              Optimizes script for xAI Grok Aurora to ensure perfect character consistency across all scenes.
+            </span>
+          </div>
+        </div>
+      </div>
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">Full Custom Script (Optional)</label>

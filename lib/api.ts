@@ -150,6 +150,7 @@ export const api = {
     llm_model?: string;
     ai_model?: string;
     aspect_ratio?: string;
+    grok_mode?: boolean;
   }) {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
     try {
@@ -165,7 +166,8 @@ export const api = {
           extra_instructions: data.extra_instructions || "",
           llm_model: data.llm_model || "groq",
           ai_model: data.ai_model || "veo3.1",
-          aspect_ratio: data.aspect_ratio || "16:9"
+          aspect_ratio: data.aspect_ratio || "16:9",
+          grok_mode: data.grok_mode || false
         })
       });
 
@@ -189,6 +191,7 @@ export const api = {
     llm_model?: string;
     ai_model?: string;
     aspect_ratio?: string;
+    grok_mode?: boolean;
   }) {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
     try {
@@ -202,7 +205,8 @@ export const api = {
           instructions: data.instructions || "Improve this scene",
           llm_model: data.llm_model || "groq",
           ai_model: data.ai_model || "veo3.1",
-          aspect_ratio: data.aspect_ratio || "16:9"
+          aspect_ratio: data.aspect_ratio || "16:9",
+          grok_mode: data.grok_mode || false
         })
       });
 
@@ -347,7 +351,7 @@ Respond with valid JSON only. No markdown. Structure:
       "image_quality": "Rendering params (e.g. --q 2 --style raw)",
       "image_character_consistency": "Character ref weights (e.g. --cw 100)",
       "image_negative_prompt": "Unwanted elements (e.g. --no text, watermarks)",
-      "video_prompt": "Camera: [exact movement]. Subject: [exact action]. Voice: highly expressive, emotional, human-like for YouTube monetization safety.",
+      "video_prompt": "Camera: [exact movement]. Subject: [exact action]. Voice: SAME narrator voice throughout — do NOT change voice actor between clips. Highly expressive, human-like pacing for YouTube monetization safety.",
       "vfx": "Specific VFX for this moment",
       "sound": "Specific Foley SFX, e.g. 'Crisp footstep on wet concrete with distant siren echo'",
       "music": "Genre, BPM, instruments, energy, e.g. 'Dark ambient drone, 60 BPM, deep cello + reverb pad, haunting'",
@@ -564,6 +568,60 @@ Adhere strictly to the Output Format specified in your system instructions. Prod
       console.error("Backend TTS Error:", e);
       throw e;
     }
+  },
+
+  async generateGrokVideos(data: {
+    scenes: { scene_number: number; video_prompt: string; duration_seconds: number }[];
+    aspect_ratio?: string;
+    use_sub_clips?: boolean;
+    onProgress?: (completed: number, total: number, message: string) => void;
+  }) {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
+    // Step 1: Submit job
+    const resp = await fetch(`${backendUrl}/api/grok-video`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scenes: data.scenes.map(s => ({
+          scene_number: s.scene_number,
+          video_prompt: s.video_prompt,
+          duration_seconds: s.duration_seconds,
+          narration: s.narration || ''     // Aurora speaks this in the video
+        })),
+        aspect_ratio: data.aspect_ratio || '16:9',
+        use_sub_clips: data.use_sub_clips || false
+      })
+    });
+    if (!resp.ok) throw new Error(`Grok video submit failed: ${await resp.text()}`);
+    const { job_id } = await resp.json();
+
+    // Step 2: Poll SSE for progress
+    return new Promise<{ video_files: any[] }>((resolve, reject) => {
+      const evtSource = new EventSource(`${backendUrl}/api/grok-video/status/${job_id}`);
+      evtSource.onmessage = (e) => {
+        try {
+          const job = JSON.parse(e.data);
+          if (data.onProgress) {
+            data.onProgress(job.completed || 0, job.total || data.scenes.length, job.message || '');
+          }
+          if (job.status === 'completed') {
+            evtSource.close();
+            resolve({ video_files: job.video_files });
+          } else if (job.status === 'failed') {
+            evtSource.close();
+            reject(new Error(job.message || 'Grok video generation failed'));
+          }
+        } catch (err) {
+          evtSource.close();
+          reject(err);
+        }
+      };
+      evtSource.onerror = () => {
+        evtSource.close();
+        reject(new Error('SSE connection lost during Grok video generation'));
+      };
+    });
   },
 
   async getVoices() {

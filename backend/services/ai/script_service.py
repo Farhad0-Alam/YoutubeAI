@@ -14,7 +14,8 @@ async def generate_with_model(
     ai_model: str = "veo3.1",
     aspect_ratio: str = "16:9",
     voice_gender: str = "Male",
-    visual_style: str = "cinematic"
+    visual_style: str = "cinematic",
+    grok_mode: bool = False
 ) -> dict:
     """Route generation to the correct AI provider."""
     total_seconds = round(duration_minutes * 60)
@@ -37,7 +38,8 @@ async def generate_with_model(
         voice_gender=voice_gender,
         ai_model=ai_model,
         aspect_ratio=aspect_ratio,
-        visual_style=visual_style
+        visual_style=visual_style,
+        grok_mode=grok_mode
     )
     user_prompt = build_user_prompt(topic, duration_minutes, extra_instructions)
 
@@ -53,7 +55,7 @@ async def generate_with_model(
         if not handler: continue
         
         try:
-            logger.info(f"Generating script with provider: {provider}, visual model: {ai_model}")
+            logger.info(f"Generating script with provider: {provider}, visual model: {ai_model}, grok_mode: {grok_mode}")
             result = await handler(system_prompt, user_prompt)
             break 
         except Exception as e:
@@ -102,12 +104,33 @@ async def rewrite_scene_content(
     instructions: str,
     llm_model: str = "groq",
     ai_model: str = "veo3.1",
-    aspect_ratio: str = "16:9"
+    aspect_ratio: str = "16:9",
+    grok_mode: bool = False
 ) -> dict:
     """Rewrite a specific scene based on user instructions."""
     model_rules = get_model_prompt_rules(ai_model, aspect_ratio)
     
-    system_prompt = f"""You are a cinematic script supervisor AND AI prompt engineer. Rewrite the following scene.
+    if grok_mode:
+        # In grok mode, we use a much slimmer JSON for rewriting to match the generation style
+        system_prompt = f"""You are a cinematic script supervisor AND AI prompt engineer. Rewrite the following scene for a GROK-ONLY video pipeline.
+Instructions: {instructions}
+Respond with valid JSON:
+{{
+  "scene_number": {scene_data.get('scene_number', 1)},
+  "duration_seconds": {scene_data.get('duration_seconds', 15)},
+  "narration": "Revised narration",
+  "voice_tone": "Tone",
+  "text_overlay": "Caption",
+  "visual_description": "New cinematic visual description",
+  "video_prompt": "GROK-READY video prompt.",
+  "transition": "transition style", 
+  "camera_motion": "camera directions",
+  "sound": "Foley SFX",
+  "music": "Music",
+  "call_to_action_cue": "Specific CTA"
+}}"""
+    else:
+        system_prompt = f"""You are a cinematic script supervisor AND AI prompt engineer. Rewrite the following scene.
 Niche: {niche_config.get('display_name')}
 Topic: {topic}
 Tone: {niche_config.get('script_tone')}
@@ -161,7 +184,7 @@ Respond with valid JSON for the scene only. No markdown.
         if not handler: continue
         
         try:
-            logger.info(f"Rewriting scene with provider: {provider}")
+            logger.info(f"Rewriting scene with provider: {provider}, grok_mode={grok_mode}")
             return await handler(system_prompt, user_prompt)
         except Exception as e:
             last_error = e

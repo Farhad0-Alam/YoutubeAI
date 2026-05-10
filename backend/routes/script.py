@@ -18,6 +18,7 @@ class GenerateRequest(BaseModel):
     llm_model: Optional[str] = "groq"
     ai_model: Optional[str] = "veo3.1"
     aspect_ratio: Optional[str] = "16:9"
+    grok_mode: Optional[bool] = False   # True = Grok video pipeline (skip image fields, focus on video_prompt)
 
 @router.post("/generate")
 async def api_generate_script(request: GenerateRequest):
@@ -51,7 +52,8 @@ async def api_generate_script(request: GenerateRequest):
             ai_model=request.ai_model or "veo3.1",
             aspect_ratio=request.aspect_ratio or "16:9",
             voice_gender=request.voice_gender or "Male",
-            visual_style=request.visual_style or "cinematic"
+            visual_style=request.visual_style or "cinematic",
+            grok_mode=request.grok_mode or False
         )
 
         # ── Build full SEO description from parts ────────────────────────────

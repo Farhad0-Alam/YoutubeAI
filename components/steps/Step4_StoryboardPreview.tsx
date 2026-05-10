@@ -181,6 +181,27 @@ export function Step4_StoryboardPreview() {
     toast.success(`Applied ${label} to all sub-scenes!`);
   };
 
+  const handleGenerateImage = async (sceneIdx: number, subIdx: number) => {
+    if (!scriptData) return;
+    const scene = scriptData.scenes[sceneIdx];
+    const sub = scene.sub_scenes[subIdx];
+    if (!sub.image_prompt) {
+      toast.error('Please generate prompts first');
+      return;
+    }
+
+    setGeneratingScene(sceneIdx); // Reuse generatingScene for simplicity or add specific state
+    try {
+      const url = await api.generateImage({ prompt: sub.image_prompt });
+      handleSubSceneUpdate(sceneIdx, subIdx, 'preview_url', url);
+      toast.success('Image generated successfully!');
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to generate image');
+    } finally {
+      setGeneratingScene(null);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       <StoryboardHeader
@@ -206,6 +227,7 @@ export function Step4_StoryboardPreview() {
             generatingScene={generatingScene}
             generatingAll={generatingAll}
             onGenerateSubScenes={handleGenerateSubScenes}
+            onGenerateImage={handleGenerateImage}
             onSubSceneUpdate={handleSubSceneUpdate}
             onCopy={handleCopy}
             copiedId={copiedId}
@@ -225,9 +247,14 @@ export function Step4_StoryboardPreview() {
           <button onClick={() => setStep(3)} className="w-full sm:w-auto px-6 py-3 sm:py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold border border-gray-300 shadow-sm hover:bg-gray-200 transition-colors text-center">
             Back to Script
           </button>
-          <button onClick={() => setStep(5)} className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
-            Continue to Generate Media
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button onClick={() => setStep(8)} className="w-full sm:w-auto px-6 py-3 sm:py-4 bg-gray-100 text-gray-500 rounded-xl font-bold border border-gray-300 hover:bg-gray-200 transition-colors text-center">
+              Skip to Render
+            </button>
+            <button onClick={() => setStep(5)} className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+              Continue to Media Dashboard
+            </button>
+          </div>
         </div>
       </div>
     </div>

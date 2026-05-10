@@ -1,5 +1,5 @@
-import React from 'react';
 import { SubSceneVideoCard } from './SubSceneVideoCard';
+import { SubSceneImageCard } from './SubSceneImageCard';
 
 interface SubSceneItemProps {
   sceneIdx: number;
@@ -8,9 +8,11 @@ interface SubSceneItemProps {
   scene: any;
   isProMode: boolean;
   isGeneratingPrompts?: boolean;
+  isGeneratingImage?: boolean;
   totalScenes?: number;
   onUpdate: (field: string, value: string) => void;
   onGeneratePrompts?: () => void;
+  onGenerateImage?: () => void;
   onCopy: (text: string, id: string) => void;
   copiedId: string | null;
   voiceEnabled: boolean;
@@ -27,8 +29,12 @@ export function SubSceneItem({
   sub,
   scene,
   isProMode,
+  isGeneratingPrompts = false,
+  isGeneratingImage = false,
   totalScenes,
   onUpdate,
+  onGeneratePrompts = () => {},
+  onGenerateImage = () => {},
   onCopy,
   copiedId,
   voiceEnabled,
@@ -49,7 +55,27 @@ export function SubSceneItem({
         </div>
       </div>
 
-      <div className="p-0 grid grid-cols-1 divide-y divide-gray-200">
+      <div className="p-0 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+        <SubSceneImageCard 
+          sceneIdx={sceneIdx}
+          subIdx={subIdx}
+          sub={sub}
+          scene={scene}
+          isProMode={isProMode}
+          isGeneratingImage={isGeneratingImage}
+          isGeneratingPrompts={isGeneratingPrompts}
+          hasAiPrompts={hasAiPrompts}
+          onUpdate={onUpdate}
+          onGenerateImage={onGenerateImage}
+          onGeneratePrompts={onGeneratePrompts}
+          onCopy={onCopy}
+          copiedId={copiedId}
+          onApplyToAll={onApplyToAll}
+          buildImagePrompt={() => {
+            // Simple build image prompt logic if needed or just pass the prompt
+            return sub.image_prompt || '';
+          }}
+        />
         <SubSceneVideoCard 
           sceneIdx={sceneIdx}
           subIdx={subIdx}

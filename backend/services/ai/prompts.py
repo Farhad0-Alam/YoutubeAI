@@ -22,7 +22,8 @@ def build_system_prompt(
     voice_gender: str = "Male",
     ai_model: str = "veo3.1",
     aspect_ratio: str = "16:9",
-    visual_style: str = "cinematic"
+    visual_style: str = "cinematic",
+    grok_mode: bool = False   # True = skip image fields, focus on video_prompt + narration
 ) -> str:
     total_seconds = round(duration_minutes * 60)
     num_full_scenes = total_seconds // scene_length
@@ -41,20 +42,49 @@ def build_system_prompt(
     num_scenes = len(scene_durations)
     durations_str = ", ".join([f"Scene {i+1}: {d}s" for i, d in enumerate(scene_durations)])
     
+    # Build a locked Voice Actor Anchor from user's selection
+    if voice_gender.lower() == "female":
+        voice_actor_anchor = "narrated by a confident American female narrator, 30-40 years old, warm clear alto voice, consistent throughout all scenes"
+        voice_tone_example = "Confident Female — warm, clear alto, American accent"
+    else:
+        voice_actor_anchor = "narrated by a confident American male narrator, 35-45 years old, deep baritone voice, authoritative and consistent throughout all scenes"
+        voice_tone_example = "Confident Male — deep baritone, American accent, authoritative"
+
     scenes_example_items = []
     for i, d in enumerate(scene_durations):
-        item = f"""    {{
+        if grok_mode:
+            # Grok mode: skip image_* fields — Grok Aurora handles visuals + voice in one step
+            item = f"""    {{
       "scene_number": {i+1},
       "duration_seconds": {d},
-      "narration": "[emotion] Narration for scene {i+1}",
-      "voice_tone": "Tone",
+      "narration": "EXACT {round(d*2.25)} words of narration — {voice_actor_anchor}.",
+      "voice_tone": "{voice_tone_example}",
+      "text_overlay": "Short engaging on-screen caption (max 6 words)",
+      "text_position": "bottom-center",
+      "visual_description": "Detailed cinematic visual description for this scene",
+      "video_prompt": "GROK-READY video prompt. {voice_actor_anchor}. Camera: [exact movement]. Subject: [exact action]. Scene: [environment detail]. Mood: [atmosphere]. Style: {visual_style}.",
+      "transition": "Smooth cut or cross-dissolve",
+      "camera_motion": "Explicit camera directions",
+      "color_grading": "Color grading intent",
+      "sound": "Specific Foley SFX (High-fidelity description)",
+      "music": "Genre, BPM, instruments, energy",
+      "timing_and_pacing": "Target: {round(d*2.25)} words for {d}s",
+      "emotional_arc": "Emotional beat for this scene",
+      "call_to_action_cue": "Specific CTA for this scene (MUST NOT BE EMPTY)"
+    }}"""
+        else:
+            item = f"""    {{
+      "scene_number": {i+1},
+      "duration_seconds": {d},
+      "narration": "Narration for scene {i+1} — EXACTLY {round(d*2.25)} words",
+      "voice_tone": "{voice_tone_example}",
       "text_overlay": "Engaging on-screen text",
       "text_position": "AI Auto-Select",
       "text_animation": "AI Auto-Select",
       "text_box_style": "AI Auto-Select",
       "visual_description": "Cinematic visual description",
       "search_keyword": "Pexels search terms",
-      "image_prompt": "PRODUCTION-READY image prompt",
+      "image_prompt": "PRODUCTION-READY image prompt. {voice_actor_anchor}.",
       "image_subject": "Subject",
       "image_setting": "Setting",
       "image_mood": "Mood",
@@ -63,22 +93,22 @@ def build_system_prompt(
       "image_camera_angle": "Angle",
       "image_shot_type": "Shot type",
       "image_style_modifier": "Style",
-      "video_prompt": "PRODUCTION-READY video prompt",
+      "video_prompt": "PRODUCTION-READY video prompt. {voice_actor_anchor}. Camera: [exact movement]. Subject: [exact action].",
       "transition": "Transition",
       "camera_motion": "Camera motion",
       "color_grading": "Color grading",
       "vfx": "Visual effects details (MUST NOT BE EMPTY)",
       "sound": "Foley SFX",
       "music": "Music description",
-      "timing_and_pacing": "Timing",
-      "emotional_arc": "Emotion",
+      "timing_and_pacing": "Target: {round(d*2.25)} words for {d}s",
+      "emotional_arc": "Steady",
       "call_to_action_cue": "Specific CTA instruction (MUST NOT BE EMPTY)"
     }}"""
         scenes_example_items.append(item)
     scenes_example_json = ",\n".join(scenes_example_items)
     
     model_rules = get_model_prompt_rules(ai_model, aspect_ratio)
-    audio_block = AUDIO_PRODUCTION_BLOCK 
+    audio_block = AUDIO_PRODUCTION_BLOCK.replace("{voice_gender}", voice_gender)
     
     return f"""You are a top-tier YouTube SEO expert, Cinematic Visual Director, Voice Production Director, AND AI Prompt Engineer for high-CPM USA-based faceless channels.
 
@@ -118,33 +148,33 @@ Each scene MUST have its specific "duration_seconds" as listed above. Sum MUST e
 ═══════════════════════════════════════════════════════════════
 VOICE & WORD BUDGET RULES (MANDATORY):
 ═══════════════════════════════════════════════════════════════
-217. MEANINGFUL WORD COUNT BUDGET (STRICTLY ENFORCE):
-    - TARGET PACING: 2 TO 3 MEANINGFUL WORDS PER SECOND (STRICT).
-    - WORD COUNTING RULE: Do NOT count words with only 1 or 2 letters (e.g., "a", "is", "to", "in", "it"). ONLY count "Meaningful Words" (words with 3+ characters).
-    - 4s Scene  → 8-12 meaningful words
-    - 5s Scene  → 10-15 meaningful words
-    - 6s Scene  → 12-18 meaningful words
-    - 8s Scene  → 16-24 meaningful words
-    - 10s Scene → 20-30 meaningful words
-    - 12s Scene → 24-36 meaningful words
-    - 15s Scene → 30-45 meaningful words
-    - 20s Scene → 40-60 meaningful words
-    - 30s Scene → 60-90 meaningful words
+217. WORD COUNT BUDGET (STRICTLY ENFORCE — NO SILENCE, NO RUSHING):
+    - TARGET PACING: 2.25 WORDS PER SECOND (MANDATORY).
+    - WORD COUNTING RULE: Count EVERY single word.
+    - 4s  → EXACTLY 9 words
+    - 5s  → EXACTLY 11 words
+    - 6s  → EXACTLY 14 words
+    - 7s  → EXACTLY 16 words
+    - 8s  → EXACTLY 18 words
+    - 9s  → EXACTLY 20 words
+    - 10s → EXACTLY 23 words
+    - 11s → EXACTLY 25 words
+    - 12s → EXACTLY 27 words
+    - 13s → EXACTLY 29 words
+    - 14s → EXACTLY 32 words
+    - 15s → EXACTLY 34 words
+    - 20s → EXACTLY 45 words
+    - 30s → EXACTLY 68 words
 
-VOICE RULES:
-223. EVERY narration MUST start with emotion tag: [excited], [dramatic], [calm], [urgent], [whisper], [confident], [curious], [happy], [warm]
-224. MANDATORY WORD COUNT (PER SCENE): You MUST count the meaningful words for EVERY SINGLE scene individually. 
-    - If the narration is SHORT (below 2 words/sec), you MUST add more descriptive detail. 
-    - If it EXCEEDS the budget (above 3 words/sec), you MUST shorten it. 
-    - EVERY scene must be a "Perfect Fit" within its specific duration range. NO EXCEPTIONS.
-225. Check every scene: Scene 1, Scene 2, Scene 3... all must follow the 2-3 words/sec rule.
-226. Scene 1 = [excited] or [urgent] | Final scene = [calm] or [warm]
-227. NEVER repeat same emotion on consecutive scenes
-228. Sound effects = specific Foley (e.g. "Heavy metallic clang reverberating in empty warehouse")
-229. Music = genre, BPM, instruments, energy (e.g. "Dark trap beat, 75 BPM, 808 sub-bass, tension building")
-230. Text Overlays: ALWAYS set "text_position", "text_animation", and "text_box_style" to "AI Auto-Select" unless you have a specific artistic reason to choose a fixed value.
-231. VFX & CTA: These fields MUST be descriptive. DO NOT leave them empty. Describe specific visual effects and on-screen call-to-actions.
-232. Visual Details: "image_subject", "image_setting", etc. MUST be populated with detailed strings, not just one word.
+223. EXACT WORD COUNT MANDATE: You MUST hit the "EXACTLY X words" target for every scene. 
+    - Being even 2 words off will cause the narration to be rejected.
+    - This ensures "Perfect Pacing" (2.25 words/sec) across the entire video.
+224. SELF-VERIFICATION: Count the words for every scene. If it doesn't match the target, rewrite it until it does.
+225. Sound effects = specific Foley (e.g. "Heavy metallic clang reverberating in empty warehouse")
+226. Music = genre, BPM, instruments, energy (e.g. "Dark trap beat, 75 BPM, 808 sub-bass, tension building")
+227. Text Overlays: ALWAYS set "text_position", "text_animation", and "text_box_style" to "AI Auto-Select" unless you have a specific artistic reason to choose a fixed value.
+228. VFX & CTA: These fields MUST be descriptive. DO NOT leave them empty. Describe specific visual effects and on-screen call-to-actions.
+229. Visual Details: "image_subject", "image_setting", etc. MUST be populated with detailed strings, not just one word.
 ═══════════════════════════════════════════════════════════════
 
 Script style: {script_style}
